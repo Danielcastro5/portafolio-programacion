@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamer Battlestation 3D – Setup Personalizado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <!-- 3D WebGL Canvas -->
+  <canvas id="webgl"></canvas>
+
+  <!-- Preloader Screen -->
+  <div id="preloader" class="preloader">
+    <div class="loader-content">
+      <div class="fan-icon">
+        <div class="fan-blade fb1"></div>
+        <div class="fan-blade fb2"></div>
+        <div class="fan-blade fb3"></div>
+        <div class="fan-blade fb4"></div>
+        <div class="fan-center"></div>
+      </div>
+      <h2 class="loader-title">Cargando Setup Gamer 3D...</h2>
+      <div class="loader-bar-bg">
+        <div id="loader-bar" class="loader-bar"></div>
+      </div>
+      <p id="loader-percent" class="loader-percent">0%</p>
+      <button id="start-btn" class="start-btn">ENTRAR AL SETUP</button>
+    </div>
+  </div>
+
+  <!-- HUD Interface (Floating Minimalist UI) -->
+  <div id="hud" class="hud">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="brand-pill">
+        <span class="status-dot"></span>
+        <span class="brand-name">Battlestation 3D</span>
+        <span class="badge">Custom Setup v2</span>
+      </div>
+
+      <!-- Hint Toast en la parte superior -->
+      <div id="hint-toast" class="hint-toast">
+        <span>🎮 Haz clic en los botones o en el setup para enfocar la vista cinemática</span>
+      </div>
+
+      <div class="top-actions">
+        <button id="btn-reset" class="icon-btn" title="Restablecer Vista Isométrica">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Bottom Navigation Bar: Enfoque al Setup y Componentes -->
+    <nav class="bottom-nav">
+      <button class="nav-pill active" data-poi="home">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Setup General</span>
+      </button>
+      <button class="nav-pill" data-poi="monitor">
+        <span class="nav-icon">🖥️</span>
+        <span class="nav-label">Portafolio (Proyectos)</span>
+      </button>
+      <button class="nav-pill" data-poi="verticalScreen">
+        <span class="nav-icon">📱</span>
+        <span class="nav-label">Contacto & Redes</span>
+      </button>
+      <button class="nav-pill" data-poi="wallDisplay">
+        <span class="nav-icon">📺</span>
+        <span class="nav-label">Smart TV (Nosotros)</span>
+      </button>
+      <button class="nav-pill" data-poi="leftVideo">
+        <span class="nav-icon">🎬</span>
+        <span class="nav-label">Videos en Pared</span>
+      </button>
+      <button class="nav-pill" data-poi="tower">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label">Torre Gamer RGB</span>
+      </button>
+      <button class="nav-pill" data-poi="chair">
+        <span class="nav-icon">💺</span>
+        <span class="nav-label">Silla Gamer</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- =========================================================================
+       MODALES INTERACTIVOS (PROYECTOS, CONTACTO/COTIZACIÓN Y QUIÉNES SOMOS)
+       ========================================================================= -->
+  <div id="modal-overlay" class="modal-overlay">
+    <!-- 1. MODAL: PORTAFOLIO DE PROYECTOS CON ENLACES (MONITOR ULTRAWIDE) -->
+    <div id="modal-projects" class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon">🖥️</span>
+          <div>
+            <h2 class="modal-title">Portafolio de Proyectos Tech</h2>
+            <p class="modal-subtitle">Proyectos reales interactivos desarrollados para clientes & startups</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close="modal-projects">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="projects-filter-bar">
+          <button class="filter-btn active" data-filter="all">Todos</button>
+          <button class="filter-btn" data-filter="web3d">Web 3D & WebGL</button>
+          <button class="filter-btn" data-filter="saas">SaaS & Full-Stack</button>
+          <button class="filter-btn" data-filter="ai">Inteligencia Artificial</button>
+        </div>
+
+        <div class="projects-grid">
+          <!-- Proyecto 1 -->
+          <article class="project-card" data-category="saas">
+            <div class="project-card-header">
+              <span class="project-tag">SaaS / Cloud</span>
+              <span class="project-status">● Live</span>
+            </div>
+            <h3 class="project-name">Nexus SaaS Analytics</h3>
+            <p class="project-desc">Plataforma B2B de inteligencia de negocios con streaming de métricas en tiempo real, autenticación OAuth y facturación global con Stripe.</p>
+            <div class="project-tech-badges">
+              <span>Next.js 14</span>
+              <span>TypeScript</span>
+              <span>PostgreSQL</span>
+              <span>Stripe</span>
+              <span>TailwindCSS</span>
+            </div>
+            <div class="project-links">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="btn-project-link primary">
+                <span>Ver Demo en Vivo</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="btn-project-link secondary">
+                <span>Código GitHub</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              </a>
+            </div>
+          </article>
+
+          <!-- Proyecto 2 -->
+          <article class="project-card" data-category="web3d">
+            <div class="project-card-header">
+              <span class="project-tag">Web 3D & Shaders</span>
+              <span class="project-status glow">★ Featured</span>
+            </div>
+            <h3 class="project-name">Aetheria 3D Metaverse</h3>
+            <p class="project-desc">Espacio digital tridimensional interactivo con física de colisiones en tiempo real, shaders GLSL de refracción de luz y soporte WebXR optimizado a 60 FPS.</p>
+            <div class="project-tech-badges">
+              <span>Three.js</span>
+              <span>WebGL</span>
+              <span>GLSL Shaders</span>
+              <span>GSAP</span>
+              <span>Vite</span>
+            </div>
+            <div class="project-links">
+              <a href="https://threejs.org" target="_blank" rel="noopener noreferrer" class="btn-project-link primary">
+                <span>Ver Experiencia 3D</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="btn-project-link secondary">
+                <span>Repositorio</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              </a>
+            </div>
+          </article>
+
+          <!-- Proyecto 3 -->
+          <article class="project-card" data-category="ai">
+            <div class="project-card-header">
+              <span class="project-tag">IA & Automatización</span>
+              <span class="project-status">● Production</span>
+            </div>
+            <h3 class="project-name">Quantum AI Agent Core</h3>
+            <p class="project-desc">Ecosistema de agentes autónomos para extracción de datos no estructurados, procesamiento de lenguaje natural y ejecución de flujos lógicos con latencia inferior a 200ms.</p>
+            <div class="project-tech-badges">
+              <span>Python</span>
+              <span>FastAPI</span>
+              <span>OpenAI API</span>
+              <span>Docker</span>
+              <span>Redis</span>
+            </div>
+            <div class="project-links">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="btn-project-link primary">
+                <span>Documentación API</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="btn-project-link secondary">
+                <span>Código Fuente</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span>¿Tienes un proyecto similar en mente?</span>
+        <button class="btn-cta-switch" data-switch="modal-contact">Solicitar Cotización & Cotizar Proyecto 🚀</button>
+      </div>
+    </div>
+
+    <!-- 2. MODAL: CONTACTO, REDES Y SOLICITUD DE PROYECTO (MONITOR VERTICAL) -->
+    <div id="modal-contact" class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon">📱</span>
+          <div>
+            <h2 class="modal-title">Contacto & Solicitud de Proyecto</h2>
+            <p class="modal-subtitle">Conéctate en nuestras redes o cuéntanos los detalles de tu proyecto</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close="modal-contact">&times;</button>
+      </div>
+
+      <div class="modal-body two-columns">
+        <!-- Columna Izquierda: Nuestras Redes Sociales -->
+        <div class="social-links-panel">
+          <h3 class="panel-heading">Nuestras Redes Oficiales</h3>
+          <p class="panel-lead">Puedes escribirnos directamente o seguir nuestro trabajo en cualquiera de estas plataformas:</p>
+
+          <div class="social-buttons-list">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-pill github">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              <div class="social-text">
+                <span class="social-name">GitHub</span>
+                <span class="social-handle">@masterdent-soft</span>
+              </div>
+            </a>
+
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-pill linkedin">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+              <div class="social-text">
+                <span class="social-name">LinkedIn</span>
+                <span class="social-handle">/in/freelance-tech-dev</span>
+              </div>
+            </a>
+
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="social-pill twitter">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <div class="social-text">
+                <span class="social-name">X (Twitter)</span>
+                <span class="social-handle">@masterdent_tech</span>
+              </div>
+            </a>
+
+            <a href="mailto:contacto@masterdent-soft.com" class="social-pill email">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              <div class="social-text">
+                <span class="social-name">Correo Directo</span>
+                <span class="social-handle">contacto@masterdent-soft.com</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Formulario de Solicitud de Proyecto -->
+        <div class="project-form-panel">
+          <h3 class="panel-heading">Solicitar Cotización de Proyecto</h3>
+          <p class="panel-lead">Rellena este formulario para coordinar alcance, presupuesto y tiempos:</p>
+
+          <form id="project-request-form" class="tech-form">
+            <div class="form-group">
+              <label for="req-name">Tu Nombre o Empresa *</label>
+              <input type="text" id="req-name" required placeholder="Ej: Carlos Gómez / Nova Studios">
+            </div>
+
+            <div class="form-group">
+              <label for="req-email">Correo Electrónico *</label>
+              <input type="email" id="req-email" required placeholder="tu-correo@empresa.com">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="req-type">Tipo de Proyecto</label>
+                <select id="req-type">
+                  <option value="web3d">Sitio Web 3D / Interactivo</option>
+                  <option value="saas">Plataforma Web SaaS / Full-Stack</option>
+                  <option value="mobile">Aplicación Móvil (iOS / Android)</option>
+                  <option value="ai">Solución IA / Automatización</option>
+                  <option value="other">Otro / Consultoría Tecnológica</option>
+                </select>
+              </div>
+
+              <div class="form-group flex-1">
+                <label for="req-budget">Presupuesto Estimado</label>
+                <select id="req-budget">
+                  <option value="tier1">&lt; $1,000 USD</option>
+                  <option value="tier2">$1,000 - $3,000 USD</option>
+                  <option value="tier3" selected>$3,000 - $5,000 USD</option>
+                  <option value="tier4">&gt; $5,000 USD</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="req-subject">Asunto / ¿De qué se trata el proyecto? *</label>
+              <textarea id="req-subject" rows="4" required placeholder="Describe aquí de qué se trata el proyecto que quieres trabajar con nosotros, qué requerimientos o ideas tienes en mente..."></textarea>
+            </div>
+
+            <button type="submit" id="btn-submit-request" class="btn-submit-form">
+              <span class="btn-text">🚀 Enviar Solicitud de Proyecto</span>
+            </button>
+
+            <!-- Mensaje de confirmación tecnológico -->
+            <div id="form-success-alert" class="form-success-alert">
+              <div class="success-icon">✓</div>
+              <div>
+                <strong>¡Solicitud Enviada con Éxito!</strong>
+                <p>Hemos recibido los detalles de tu proyecto. Te responderemos en tu correo en menos de 24 horas.</p>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MODAL: QUIÉNES SOMOS & STACK TECH (PANTALLA DE PARED) -->
+    <div id="modal-about" class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon">🌐</span>
+          <div>
+            <h2 class="modal-title">Quiénes Somos & Capacidades</h2>
+            <p class="modal-subtitle">Estudio de Ingeniería de Software, Desarrollo Web 3D y Soluciones Digitales</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close="modal-about">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="about-hero-block">
+          <h3>Ingeniería Digital de Vanguardia para Startups y Empresas</h3>
+          <p>Somos un equipo de desarrolladores e ingenieros de software freelance dedicados a transformar conceptos complejos en experiencias digitales veloces, intuitivas y de alto rendimiento. Fusionamos la elegancia visual con arquitecturas de software modernas, seguras y escalables.</p>
+        </div>
+
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon">⚡</div>
+            <h4>Desarrollo Web 3D & WebGL</h4>
+            <p>Experiencias inmersivas con Three.js, shaders GLSL personalizados, animaciones cinemáticas con GSAP y optimización a 60 FPS.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">💻</div>
+            <h4>Plataformas Full-Stack & SaaS</h4>
+            <p>Aplicaciones modernas con Next.js, React, Node.js, arquitectura de microservicios, bases de datos SQL/NoSQL y pasarelas de pago.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">🤖</div>
+            <h4>Inteligencia Artificial & Cloud</h4>
+            <p>Integración de modelos LLM, agentes autónomos, pipelines de datos en Python y despliegues contenerizados en Docker y AWS.</p>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">📱</div>
+            <h4>Diseño UI/UX & Apps Móviles</h4>
+            <p>Interfaces estéticas de nivel internacional con tipografía curada, sistemas de diseño escalables y apps móviles reactivas.</p>
+          </div>
+        </div>
+
+        <div class="tech-stack-section">
+          <h4 class="stack-heading">Stack Tecnológico Dominado</h4>
+          <div class="tech-pills-wrap">
+            <span class="tech-pill highlight">JavaScript (ESNext)</span>
+            <span class="tech-pill highlight">TypeScript</span>
+            <span class="tech-pill highlight">React & Next.js 14</span>
+            <span class="tech-pill highlight">Three.js & WebGL</span>
+            <span class="tech-pill">Node.js</span>
+            <span class="tech-pill">Python & FastAPI</span>
+            <span class="tech-pill">Docker</span>
+            <span class="tech-pill">PostgreSQL & Prisma</span>
+            <span class="tech-pill">Tailwind CSS</span>
+            <span class="tech-pill">GSAP Motion</span>
+            <span class="tech-pill">AWS & Vercel</span>
+            <span class="tech-pill">Git & CI/CD</span>
+          </div>
+        </div>
+
+        <div class="stats-counter-strip">
+          <div class="stat-item">
+            <span class="stat-number">+45</span>
+            <span class="stat-label">Proyectos Entregados</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">99.8%</span>
+            <span class="stat-label">Clientes Satisfechos</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">5+</span>
+            <span class="stat-label">Años de Trayectoria</span>
+          </div>
+          <div class="stat-item status-live">
+            <span class="status-indicator"></span>
+            <span class="stat-label">Disponibilidad Inmediata para Freelance</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span>¿Listo para dar vida a tu próximo gran proyecto?</span>
+        <button class="btn-cta-switch" data-switch="modal-contact">Contactar & Empezar Ahora 🚀</button>
+      </div>
+    </div>
+
+    <!-- 4. MODAL: CONTROL DE TRANSMISIÓN DE VIDEOS EN VIVO EN PARED (ESTILO JESSE ZHOU) -->
+    <div id="modal-video" class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon">🎬</span>
+          <div>
+            <h2 class="modal-title">Live Wall Streams // Jesse Zhou Style</h2>
+            <p class="modal-subtitle">Transmisión de videos, trailers, clips deportivos y comerciales en vivo</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close="modal-video">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="video-channel-grid">
+          <!-- Pantalla Izquierda -->
+          <div class="video-screen-ctrl">
+            <div class="screen-ctrl-header">
+              <span class="screen-pill">PANTALLA 1 (IZQUIERDA)</span>
+              <span class="live-indicator">● EN VIVO</span>
+            </div>
+            <h3 class="video-screen-title">Tráiler de Cine & Sci-Fi 4K</h3>
+            <div class="video-ctrl-btns">
+              <button id="btn-toggle-audio-left" class="btn-audio-toggle">🔊 Activar Audio</button>
+              <button id="btn-pause-left" class="btn-play-pause">⏸ Pausar</button>
+            </div>
+            <div class="video-source-presets">
+              <span class="preset-label">Canales Rápidos:</span>
+              <button class="btn-preset" data-screen="left" data-src="/videos/clip_left.mp4">🎬 Tráiler Sci-Fi 4K</button>
+              <button class="btn-preset" data-screen="left" data-src="https://media.w3.org/2010/05/bunny/trailer.mp4">🐰 Animación 3D Open</button>
+              <button class="btn-preset" data-screen="left" data-src="https://vjs.zencdn.net/v/oceans.mp4">🌊 Océanos HD</button>
+            </div>
+            <div class="custom-video-input">
+              <input type="text" id="custom-url-left" placeholder="Pega URL de video .mp4 propio..." />
+              <button id="btn-load-custom-left" class="btn-load-src">Cargar</button>
+            </div>
+          </div>
+
+          <!-- Pantalla Derecha -->
+          <div class="video-screen-ctrl">
+            <div class="screen-ctrl-header">
+              <span class="screen-pill">PANTALLA 2 (DERECHA)</span>
+              <span class="live-indicator">● EN VIVO</span>
+            </div>
+            <h3 class="video-screen-title">Showcase Motion & Documental</h3>
+            <div class="video-ctrl-btns">
+              <button id="btn-toggle-audio-right" class="btn-audio-toggle">🔊 Activar Audio</button>
+              <button id="btn-pause-right" class="btn-play-pause">⏸ Pausar</button>
+            </div>
+            <div class="video-source-presets">
+              <span class="preset-label">Canales Rápidos:</span>
+              <button class="btn-preset" data-screen="right" data-src="/videos/clip_right.mp4">🌸 Motion Reel HD</button>
+              <button class="btn-preset" data-screen="right" data-src="https://vjs.zencdn.net/v/oceans.mp4">🌊 Océanos HD</button>
+              <button class="btn-preset" data-screen="right" data-src="https://media.w3.org/2010/05/sintel/trailer.mp4">⚔️ Tráiler Sintel 4K</button>
+            </div>
+            <div class="custom-video-input">
+              <input type="text" id="custom-url-right" placeholder="Pega URL de video .mp4 propio..." />
+              <button id="btn-load-custom-right" class="btn-load-src">Cargar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="video-info-box">
+          <p>💡 <strong>¿Cómo funciona la transmisión al estilo Jesse Zhou?</strong> Los cuadros usan <code>THREE.VideoTexture</code> conectadas a elementos <code>&lt;video&gt;</code> HTML en memoria con reproducción acelerada por GPU. Puedes cargar cualquier enlace directo a un archivo <code>.mp4</code> o colocar tus propios videos en la carpeta <code>public/videos/</code>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
