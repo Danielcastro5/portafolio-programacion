@@ -84,34 +84,156 @@ deskLedLight.position.set(0, 1.2, -2.6);
 scene.add(deskLedLight);
 
 /* ==========================================================================
-   TEXTURA PROCEDURAL DE ALFOMBRA NEGRA
+   TEXTURA PROCEDURAL DE SUELO DE MADERA MODERNA (TABLONES DE ROBLE NÓRDICO)
+   - Acabado arquitectónico limpio y moderno de tablones biselados
+   - Vetas finas de madera natural con sutil variación tonal entre tablas
+   - Mapa de relieve (BumpMap) para juntas realistas entre tablones
    ========================================================================== */
-function createBlackCarpetTexture() {
+function createModernWoodFloorTextures() {
+  const width = 1024;
+  const height = 1024;
+
+  // 1. Canvas para el Color Difuso (Albedo / Map)
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#0c0e14';
-  ctx.fillRect(0, 0, 512, 512);
+  // 2. Canvas para el Mapa de Relieve (BumpMap)
+  const bumpCanvas = document.createElement('canvas');
+  bumpCanvas.width = width;
+  bumpCanvas.height = height;
+  const bumpCtx = bumpCanvas.getContext('2d');
 
-  const imgData = ctx.getImageData(0, 0, 512, 512);
-  const data = imgData.data;
+  // Fondo neutro
+  ctx.fillStyle = '#bda285';
+  ctx.fillRect(0, 0, width, height);
 
-  for (let i = 0; i < data.length; i += 4) {
-    const noise = (Math.random() - 0.5) * 16;
-    const v = Math.min(255, Math.max(0, 12 + noise));
-    data[i] = v;
-    data[i + 1] = v + 1;
-    data[i + 2] = v + 4;
+  bumpCtx.fillStyle = '#808080';
+  bumpCtx.fillRect(0, 0, width, height);
+
+  // Paleta de madera de roble nórdico moderno (tonos cálidos, limpios y luminosos)
+  const oakTones = [
+    { r: 196, g: 168, b: 136 },
+    { r: 206, g: 178, b: 146 },
+    { r: 190, g: 160, b: 128 },
+    { r: 202, g: 174, b: 142 },
+    { r: 184, g: 154, b: 122 },
+    { r: 212, g: 184, b: 152 },
+    { r: 198, g: 170, b: 138 },
+    { r: 188, g: 158, b: 126 }
+  ];
+
+  // Configuración de filas de tablones (8 filas x repetición 3 = 24 filas, ~25cm de ancho por tablón)
+  const rowCount = 8;
+  const rowHeight = height / rowCount;
+
+  // Patrón de cortes escalonados para juntas realistas
+  const seamOffsets = [
+    [0.32, 0.74],
+    [0.18, 0.54, 0.88],
+    [0.42, 0.82],
+    [0.26, 0.68],
+    [0.14, 0.48, 0.84],
+    [0.36, 0.72],
+    [0.22, 0.62, 0.92],
+    [0.44, 0.80]
+  ];
+
+  for (let r = 0; r < rowCount; r++) {
+    const y = r * rowHeight;
+    const cuts = seamOffsets[r % seamOffsets.length];
+    const points = [0, ...cuts.map(p => Math.round(p * width)), width];
+
+    for (let p = 0; p < points.length - 1; p++) {
+      const x1 = points[p];
+      const x2 = points[p + 1];
+      const plankW = x2 - x1;
+
+      // Color base único por tablón
+      const tone = oakTones[(r * 3 + p * 5) % oakTones.length];
+      const rVar = (Math.random() - 0.5) * 6;
+      const gVar = (Math.random() - 0.5) * 6;
+      const bVar = (Math.random() - 0.5) * 6;
+      
+      const pr = Math.min(255, Math.max(0, Math.round(tone.r + rVar)));
+      const pg = Math.min(255, Math.max(0, Math.round(tone.g + gVar)));
+      const pb = Math.min(255, Math.max(0, Math.round(tone.b + bVar)));
+
+      ctx.fillStyle = `rgb(${pr}, ${pg}, ${pb})`;
+      ctx.fillRect(x1, y, plankW, rowHeight);
+
+      // Dibujar vetas finas longitudinales de madera moderna
+      const grainCount = Math.floor(rowHeight * 0.75);
+      for (let g = 0; g < grainCount; g++) {
+        const gy = y + (g / grainCount) * rowHeight;
+        const alpha = 0.02 + Math.random() * 0.05;
+        const isDark = Math.random() > 0.45;
+        ctx.strokeStyle = isDark
+          ? `rgba(90, 60, 35, ${alpha})`
+          : `rgba(255, 245, 230, ${alpha * 0.8})`;
+        ctx.lineWidth = 1 + Math.random() * 1.5;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, gy);
+        const waveFreq = 0.008 + Math.random() * 0.006;
+        const waveAmp = 1.5 + Math.random() * 2.5;
+        for (let gx = x1; gx <= x2; gx += 32) {
+          const cy = gy + Math.sin(gx * waveFreq) * waveAmp;
+          ctx.lineTo(gx, cy);
+        }
+        ctx.stroke();
+
+        // En el bumpMap, las vetas dan sutil micro-relieve táctil
+        bumpCtx.strokeStyle = isDark ? 'rgba(90, 90, 90, 0.08)' : 'rgba(160, 160, 160, 0.08)';
+        bumpCtx.lineWidth = 1;
+        bumpCtx.beginPath();
+        bumpCtx.moveTo(x1, gy);
+        bumpCtx.lineTo(x2, gy);
+        bumpCtx.stroke();
+      }
+
+      // Micro-bisel superior/izquierdo (sombra suave del bisel)
+      ctx.fillStyle = 'rgba(50, 32, 18, 0.45)';
+      ctx.fillRect(x1, y, plankW, 2); // Junta horizontal superior
+      if (x1 > 0) {
+        ctx.fillRect(x1, y, 2, rowHeight); // Junta vertical izquierda
+      }
+
+      // Micro-bisel inferior (reflejo de luz en el borde del tablón)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+      ctx.fillRect(x1, y + rowHeight - 2, plankW, 1);
+
+      // Juntas en el BumpMap (ranuras oscuras que hunden el relieve)
+      bumpCtx.fillStyle = '#222222';
+      bumpCtx.fillRect(x1, y, plankW, 2);
+      if (x1 > 0) {
+        bumpCtx.fillRect(x1, y, 2, rowHeight);
+      }
+      bumpCtx.fillStyle = '#b0b0b0';
+      bumpCtx.fillRect(x1, y + rowHeight - 2, plankW, 1);
+    }
   }
-  ctx.putImageData(imgData, 0, 0);
 
+  // Línea perimetral final inferior y derecha
+  ctx.fillStyle = 'rgba(50, 32, 18, 0.45)';
+  ctx.fillRect(0, height - 2, width, 2);
+  bumpCtx.fillStyle = '#222222';
+  bumpCtx.fillRect(0, height - 2, width, 2);
+
+  // Crear texturas Three.js con repetición arquitectónica
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(8, 8);
-  return texture;
+  texture.repeat.set(3, 3);
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+  bumpTexture.wrapS = THREE.RepeatWrapping;
+  bumpTexture.wrapT = THREE.RepeatWrapping;
+  bumpTexture.repeat.set(3, 3);
+
+  return { map: texture, bumpMap: bumpTexture };
 }
 
 /* ==========================================================================
@@ -123,16 +245,17 @@ let fanLedMaterials = [];
 function buildRoom() {
   const room = new THREE.Group();
 
-  // 1. SUELO: ALFOMBRA NEGRA COMPLETA DE PARED A PARED
-  const carpetTexture = createBlackCarpetTexture();
+  // 1. SUELO: TABLONES DE MADERA MODERNA LIMPIA CON BISEL Y VETA
+  const woodTextures = createModernWoodFloorTextures();
   const floorGeo = new THREE.BoxGeometry(6.2, 0.3, 6.2);
-  const blackCarpetMat = new THREE.MeshStandardMaterial({
-    color: 0x0c0e14,
-    map: carpetTexture,
-    roughness: 0.94,
+  const modernWoodMat = new THREE.MeshStandardMaterial({
+    map: woodTextures.map,
+    bumpMap: woodTextures.bumpMap,
+    bumpScale: 0.007,
+    roughness: 0.40,
     metalness: 0.02
   });
-  const floor = new THREE.Mesh(floorGeo, blackCarpetMat);
+  const floor = new THREE.Mesh(floorGeo, modernWoodMat);
   floor.position.y = -0.15;
   floor.receiveShadow = true;
   room.add(floor);
