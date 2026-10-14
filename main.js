@@ -2004,8 +2004,7 @@ function closeCinemaMode() {
   if (playerBody) playerBody.innerHTML = '';
 }
 
-function initVideoControls() {
-  function showVideoStatus(screen, msg, type = 'info') {
+function showVideoStatus(screen, msg, type = 'info') {
     const statusEl = document.getElementById(`status-${screen}`);
     if (!statusEl) return;
     statusEl.className = `video-status-msg active ${type}`;
@@ -2156,6 +2155,7 @@ function initVideoControls() {
     }
   }
 
+function initVideoControls() {
   ['left', 'right'].forEach(screen => {
     const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
 
