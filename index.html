@@ -422,115 +422,197 @@
       <div class="modal-body">
         <div class="video-channel-grid">
           <!-- Pantalla Izquierda -->
-          <div class="video-screen-ctrl">
+          <div class="video-screen-ctrl" id="ctrl-screen-left">
             <div class="screen-ctrl-header">
               <span class="screen-pill">PANTALLA 1 (IZQUIERDA)</span>
               <span class="live-indicator">● EN VIVO</span>
             </div>
             <h3 id="video-title-left" class="video-screen-title">Tráiler Sci-Fi 4K</h3>
+            
+            <!-- Visor de Transmisión en Vivo (YouTube o Video) -->
+            <div class="screen-live-viewport">
+              <div id="player-container-left" class="player-container">
+                <!-- Se inyecta dinámicamente el reproductor de YouTube o visor en vivo -->
+              </div>
+            </div>
+
             <div class="video-ctrl-btns">
               <button id="btn-toggle-audio-left" class="btn-audio-toggle">🔊 Activar Audio</button>
               <button id="btn-pause-left" class="btn-play-pause">⏸ Pausar</button>
+              <button id="btn-cinema-left" class="btn-cinema-toggle">📺 Modo Cine</button>
             </div>
             
+            <!-- Entrada Directa para Enlaces de YouTube -->
+            <div class="custom-video-section yt-section">
+              <span class="preset-label yt-label">🔴 Pega cualquier enlace de YouTube (¡Sin descargas!):</span>
+              <div class="custom-video-input yt-input-group">
+                <input type="text" id="youtube-url-left" placeholder="https://www.youtube.com/watch?v=... o youtu.be" />
+                <button id="btn-load-yt-left" class="btn-load-src yt-submit-btn">▶ Cargar YouTube</button>
+              </div>
+              <div id="status-left" class="video-status-msg"></div>
+            </div>
+
+            <!-- Canales Rápidos de YouTube con 1 Clic -->
             <div class="video-source-presets">
-              <span class="preset-label">Canales & Transmisiones Disponibles:</span>
-              <button class="btn-preset featured-preset" data-screen="left" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux" data-src="/videos/Jugaste%20y%20Sufri%20-%20(Video%20Oficial)%20-%20Eslabon%20Armado%20ft.%20DannyLux%20-%20DEL%20Records%202021.mp4">
-                🔥🎵 Jugaste y Sufrí (DannyLux) <span class="badge-custom">TU VIDEO</span>
+              <span class="preset-label">Canales Rápidos de YouTube (1 Clic, sin descargar):</span>
+              <button class="btn-preset yt-preset" data-screen="left" data-type="youtube" data-ytid="mC1i_eG5RkE" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux">
+                🔥🎵 Jugaste y Sufrí (DannyLux - YouTube) <span class="badge-yt">YT</span>
               </button>
-              <button class="btn-preset" data-screen="left" data-title="Highlights Deportivos & Acción 4K" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">
-                🏀 Highlights Deportivos 4K
+              <button class="btn-preset yt-preset" data-screen="left" data-type="youtube" data-ytid="0r3cEAiJk18" data-title="NBA Top Dunks & Highlights 4K">
+                🏀 NBA Top Dunks & Highlights 4K <span class="badge-yt">YT</span>
               </button>
-              <button class="btn-preset" data-screen="left" data-title="Tráiler de Cine Sci-Fi 4K" data-src="/videos/clip_left.mp4">
-                🎬 Tráiler Sci-Fi 4K
+              <button class="btn-preset yt-preset" data-screen="left" data-type="youtube" data-ytid="QdBZY2fkU-0" data-title="Grand Theft Auto VI - Tráiler Oficial 4K">
+                🎮 Tráiler GTA VI 4K <span class="badge-yt">YT</span>
               </button>
-              <button class="btn-preset" data-screen="left" data-title="Acción Sci-Fi Tears of Steel" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4">
-                🚀 Tears of Steel 4K
+              <button class="btn-preset yt-preset" data-screen="left" data-type="youtube" data-ytid="eBGIQ7ZuuiU" data-title="F1 Red Bull Racing - Miami GP 4K">
+                🏎️ F1 Red Bull Racing 4K <span class="badge-yt">YT</span>
               </button>
-              <button class="btn-preset" data-screen="left" data-title="Océanos del Mundo 4K" data-src="https://vjs.zencdn.net/v/oceans.mp4">
-                🌊 Océanos HD
+              <button class="btn-preset yt-preset" data-screen="left" data-type="youtube" data-ytid="LXb3EKWsInQ" data-title="Costas y Océanos del Planeta 4K">
+                🌊 Océanos y Naturaleza 4K <span class="badge-yt">YT</span>
               </button>
             </div>
 
+            <!-- Canales de Video MP4 & Local -->
+            <div class="video-source-presets" style="margin-top: 8px;">
+              <span class="preset-label">Canales MP4 & Video Local:</span>
+              <button class="btn-preset featured-preset" data-screen="left" data-type="mp4" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux" data-src="/videos/Jugaste%20y%20Sufri%20-%20(Video%20Oficial)%20-%20Eslabon%20Armado%20ft.%20DannyLux%20-%20DEL%20Records%202021.mp4">
+                🔥🎵 Jugaste y Sufrí <span class="badge-custom">MP4 LOCAL</span>
+              </button>
+              <button class="btn-preset" data-screen="left" data-type="mp4" data-title="Tráiler de Cine Sci-Fi 4K" data-src="/videos/clip_left.mp4">
+                🎬 Tráiler Sci-Fi 4K
+              </button>
+              <button class="btn-preset" data-screen="left" data-type="mp4" data-title="Acción Sci-Fi Tears of Steel" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4">
+                🚀 Tears of Steel 4K
+              </button>
+            </div>
+
+            <!-- Selector de archivo local desde la PC -->
             <div class="local-file-picker">
-              <span class="preset-label">Reproducir video desde tu PC:</span>
+              <span class="preset-label">Reproducir archivo propio desde tu PC:</span>
               <label class="btn-file-select" for="file-video-left">
-                📁 Elegir video propio (.mp4, .webm)
+                📁 Elegir video desde tu PC (.mp4, .webm)
               </label>
               <input type="file" id="file-video-left" accept="video/mp4,video/webm" style="display:none;" />
             </div>
 
+            <!-- Enlace directo MP4 opcional -->
             <div class="custom-video-section">
-              <span class="preset-label">O pega un enlace de video directo (.mp4):</span>
+              <span class="preset-label">O enlace directo a archivo .mp4:</span>
               <div class="custom-video-input">
                 <input type="text" id="custom-url-left" placeholder="https://ejemplo.com/video.mp4" />
                 <button id="btn-load-custom-left" class="btn-load-src">Cargar</button>
               </div>
-              <div id="status-left" class="video-status-msg"></div>
             </div>
           </div>
 
           <!-- Pantalla Derecha -->
-          <div class="video-screen-ctrl">
+          <div class="video-screen-ctrl" id="ctrl-screen-right">
             <div class="screen-ctrl-header">
               <span class="screen-pill">PANTALLA 2 (DERECHA)</span>
               <span class="live-indicator">● EN VIVO</span>
             </div>
             <h3 id="video-title-right" class="video-screen-title">Motion Reel HD</h3>
+
+            <!-- Visor de Transmisión en Vivo (YouTube o Video) -->
+            <div class="screen-live-viewport">
+              <div id="player-container-right" class="player-container">
+                <!-- Se inyecta dinámicamente el reproductor de YouTube o visor en vivo -->
+              </div>
+            </div>
+
             <div class="video-ctrl-btns">
               <button id="btn-toggle-audio-right" class="btn-audio-toggle">🔊 Activar Audio</button>
               <button id="btn-pause-right" class="btn-play-pause">⏸ Pausar</button>
+              <button id="btn-cinema-right" class="btn-cinema-toggle">📺 Modo Cine</button>
             </div>
 
+            <!-- Entrada Directa para Enlaces de YouTube -->
+            <div class="custom-video-section yt-section">
+              <span class="preset-label yt-label">🔴 Pega cualquier enlace de YouTube (¡Sin descargas!):</span>
+              <div class="custom-video-input yt-input-group">
+                <input type="text" id="youtube-url-right" placeholder="https://www.youtube.com/watch?v=... o youtu.be" />
+                <button id="btn-load-yt-right" class="btn-load-src yt-submit-btn">▶ Cargar YouTube</button>
+              </div>
+              <div id="status-right" class="video-status-msg"></div>
+            </div>
+
+            <!-- Canales Rápidos de YouTube con 1 Clic -->
             <div class="video-source-presets">
-              <span class="preset-label">Canales & Transmisiones Disponibles:</span>
-              <button class="btn-preset featured-preset" data-screen="right" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux" data-src="/videos/Jugaste%20y%20Sufri%20-%20(Video%20Oficial)%20-%20Eslabon%20Armado%20ft.%20DannyLux%20-%20DEL%20Records%202021.mp4">
-                🔥🎵 Jugaste y Sufrí (DannyLux) <span class="badge-custom">TU VIDEO</span>
+              <span class="preset-label">Canales Rápidos de YouTube (1 Clic, sin descargar):</span>
+              <button class="btn-preset yt-preset" data-screen="right" data-type="youtube" data-ytid="mC1i_eG5RkE" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux">
+                🔥🎵 Jugaste y Sufrí (DannyLux - YouTube) <span class="badge-yt">YT</span>
               </button>
-              <button class="btn-preset" data-screen="right" data-title="Motion Reel HD" data-src="/videos/clip_right.mp4">
+              <button class="btn-preset yt-preset" data-screen="right" data-type="youtube" data-ytid="0r3cEAiJk18" data-title="NBA Top Dunks & Highlights 4K">
+                🏀 NBA Top Dunks & Highlights 4K <span class="badge-yt">YT</span>
+              </button>
+              <button class="btn-preset yt-preset" data-screen="right" data-type="youtube" data-ytid="QdBZY2fkU-0" data-title="Grand Theft Auto VI - Tráiler Oficial 4K">
+                🎮 Tráiler GTA VI 4K <span class="badge-yt">YT</span>
+              </button>
+              <button class="btn-preset yt-preset" data-screen="right" data-type="youtube" data-ytid="eBGIQ7ZuuiU" data-title="F1 Red Bull Racing - Miami GP 4K">
+                🏎️ F1 Red Bull Racing 4K <span class="badge-yt">YT</span>
+              </button>
+              <button class="btn-preset yt-preset" data-screen="right" data-type="youtube" data-ytid="LXb3EKWsInQ" data-title="Costas y Océanos del Planeta 4K">
+                🌊 Océanos y Naturaleza 4K <span class="badge-yt">YT</span>
+              </button>
+            </div>
+
+            <!-- Canales de Video MP4 & Local -->
+            <div class="video-source-presets" style="margin-top: 8px;">
+              <span class="preset-label">Canales MP4 & Video Local:</span>
+              <button class="btn-preset featured-preset" data-screen="right" data-type="mp4" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux" data-src="/videos/Jugaste%20y%20Sufri%20-%20(Video%20Oficial)%20-%20Eslabon%20Armado%20ft.%20DannyLux%20-%20DEL%20Records%202021.mp4">
+                🔥🎵 Jugaste y Sufrí <span class="badge-custom">MP4 LOCAL</span>
+              </button>
+              <button class="btn-preset" data-screen="right" data-type="mp4" data-title="Motion Reel HD" data-src="/videos/clip_right.mp4">
                 🌸 Motion Reel HD
               </button>
-              <button class="btn-preset" data-screen="right" data-title="Highlights Deportivos & Acción 4K" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">
+              <button class="btn-preset" data-screen="right" data-type="mp4" data-title="Highlights Deportivos & Acción 4K" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">
                 🏀 Highlights Deportivos 4K
-              </button>
-              <button class="btn-preset" data-screen="right" data-title="Tráiler de Aventura Sintel" data-src="https://media.w3.org/2010/05/sintel/trailer.mp4">
-                ⚔️ Tráiler Sintel 4K
-              </button>
-              <button class="btn-preset" data-screen="right" data-title="Océanos del Mundo 4K" data-src="https://vjs.zencdn.net/v/oceans.mp4">
-                🌊 Océanos HD
               </button>
             </div>
 
+            <!-- Selector de archivo local desde la PC -->
             <div class="local-file-picker">
-              <span class="preset-label">Reproducir video desde tu PC:</span>
+              <span class="preset-label">Reproducir archivo propio desde tu PC:</span>
               <label class="btn-file-select" for="file-video-right">
-                📁 Elegir video propio (.mp4, .webm)
+                📁 Elegir video desde tu PC (.mp4, .webm)
               </label>
               <input type="file" id="file-video-right" accept="video/mp4,video/webm" style="display:none;" />
             </div>
 
+            <!-- Enlace directo MP4 opcional -->
             <div class="custom-video-section">
-              <span class="preset-label">O pega un enlace de video directo (.mp4):</span>
+              <span class="preset-label">O enlace directo a archivo .mp4:</span>
               <div class="custom-video-input">
                 <input type="text" id="custom-url-right" placeholder="https://ejemplo.com/video.mp4" />
                 <button id="btn-load-custom-right" class="btn-load-src">Cargar</button>
               </div>
-              <div id="status-right" class="video-status-msg"></div>
             </div>
           </div>
         </div>
 
         <div class="video-info-box">
-          <p>🎬 <strong>Proyección 3D Perfecta (Three.js VideoTexture)</strong></p>
-          <p>Los videos se proyectan directamente sobre la textura 3D del cuadro con aceleración por GPU. Esto asegura que el video quede <strong>100% delimitado dentro del marco</strong>, respetando las paredes, escritorios y monitores sin sobrescribir ningún objeto de la habitación.</p>
-          <p>💡 <strong>Opciones para reproducir:</strong></p>
-          <ul class="video-solutions-list">
-            <li><strong>Tu video musical:</strong> Haz clic en <span class="badge-custom">TU VIDEO</span> para reproducir <em>"Jugaste y Sufrí"</em>.</li>
-            <li><strong>Cualquier video de tu computadora:</strong> Usa el botón <strong>"📁 Elegir video propio"</strong> para transmitir al instante cualquier clip descargado.</li>
-            <li><strong>Streaming directo:</strong> Usa los canales preconfigurados de deportes y cine o pega cualquier enlace directo a un archivo <code>.mp4</code>.</li>
-          </ul>
+          <p>🎬 <strong>Streaming de YouTube y Video Integrado Sin Errores 3D</strong></p>
+          <p>Puedes pegar <strong>cualquier enlace de YouTube</strong> o elegir un canal rápido con 1 solo clic. El video se transmite con audio en vivo y la pantalla 3D en la pared refleja la transmisión sincronizada en WebGL puro dentro de su marco exacto, <strong>sin sobreponerse ni tapar los muros, monitores ni escritorios de la habitación</strong>.</p>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- 5. HUD FLOTANTE MODO CINE / PANTALLA COMPLETA PARA TRANSMISIÓN 3D -->
+  <div id="cinema-hud" class="cinema-hud-overlay">
+    <div class="cinema-hud-window">
+      <div class="cinema-hud-header">
+        <div class="cinema-hud-title">
+          <span class="cinema-live-dot"></span>
+          <span id="cinema-screen-label" class="cinema-screen-tag">PANTALLA 1</span>
+          <span id="cinema-video-title" class="cinema-badge-title">Transmisión en Vivo</span>
+        </div>
+        <button id="btn-close-cinema" class="cinema-close-btn" title="Cerrar Modo Cine">&times;</button>
+      </div>
+      <div class="cinema-hud-body" id="cinema-player-body">
+        <!-- Player iframe inyectado dinámicamente -->
+      </div>
+    </div>
     </div>
   </div>
 
