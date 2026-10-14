@@ -237,6 +237,82 @@ function createModernWoodFloorTextures() {
 }
 
 /* ==========================================================================
+   TEXTURA PROCEDURAL DE PARED BLANCA CON TEXTURA REAL (ESTUCO / PINTURA MATE)
+   - Color blanco puro arquitectónico (#fbfcfd)
+   - Textura real de grano fino de estuco y rodillo de pintura interior mate
+   - Sin bordes negros molestos: unión limpia, continua y moderna con el suelo
+   ========================================================================== */
+function createWhitePlasterWallTextures() {
+  const width = 1024;
+  const height = 1024;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  const bumpCanvas = document.createElement('canvas');
+  bumpCanvas.width = width;
+  bumpCanvas.height = height;
+  const bumpCtx = bumpCanvas.getContext('2d');
+
+  // Base blanco puro arquitectónico
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, width, height);
+
+  bumpCtx.fillStyle = '#808080';
+  bumpCtx.fillRect(0, 0, width, height);
+
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+
+  const bumpData = bumpCtx.getImageData(0, 0, width, height);
+  const bData = bumpData.data;
+
+  // Grano fino orgánico de micro-estuco y acabado de pintura real
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+
+      const macroNoise = Math.sin(x * 0.04) * Math.cos(y * 0.04) * 2;
+      const microNoise = (Math.random() - 0.5) * 5;
+      const fineGrain = (Math.random() - 0.5) * 8;
+      const totalOffset = macroNoise + microNoise * 0.7 + fineGrain * 0.4;
+
+      const val = Math.min(255, Math.max(240, Math.round(250 + totalOffset)));
+
+      data[idx] = val;       // R
+      data[idx + 1] = val;   // G
+      data[idx + 2] = Math.min(255, val + 1); // B
+      data[idx + 3] = 255;
+
+      // Mapa de relieve (BumpMap) para que la luz rasante revele la textura física de la pared
+      const bVal = Math.min(255, Math.max(0, Math.round(128 + totalOffset * 3.2)));
+      bData[idx] = bVal;
+      bData[idx + 1] = bVal;
+      bData[idx + 2] = bVal;
+      bData[idx + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  bumpCtx.putImageData(bumpData, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 3);
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+  bumpTexture.wrapS = THREE.RepeatWrapping;
+  bumpTexture.wrapT = THREE.RepeatWrapping;
+  bumpTexture.repeat.set(4, 3);
+
+  return { map: texture, bumpMap: bumpTexture };
+}
+
+/* ==========================================================================
    CONSTRUCCIÓN DE LA HABITACIÓN (6.2m x 6.2m x 3.4m • ESCALA HUMANA REALISTA)
    ========================================================================== */
 const interactiveObjects = [];
@@ -260,11 +336,15 @@ function buildRoom() {
   floor.receiveShadow = true;
   room.add(floor);
 
-  // 2. PAREDES: BLANCO ROTO ARQUITECTÓNICO / GRIS TIZA DE ESTUDIO (#b4bcc8)
+  // 2. PAREDES: BLANCO PURO ARQUITECTÓNICO CON TEXTURA REAL DE ESTUCO/PINTURA MATE
+  const wallTextures = createWhitePlasterWallTextures();
   const studioWallMat = new THREE.MeshStandardMaterial({
-    color: 0xb4bcc8,
-    roughness: 0.80,
-    metalness: 0.01
+    color: 0xffffff,
+    map: wallTextures.map,
+    bumpMap: wallTextures.bumpMap,
+    bumpScale: 0.0035,
+    roughness: 0.88,
+    metalness: 0.0
   });
 
   // Pared izquierda
@@ -278,16 +358,6 @@ function buildRoom() {
   wallBack.position.set(0, 1.7, -3.05);
   wallBack.receiveShadow = true;
   room.add(wallBack);
-
-  // Zócalo perimetral negro fino
-  const baseboardMat = new THREE.MeshStandardMaterial({ color: 0x11131a, roughness: 0.35 });
-  const bbBack = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.12, 0.22), baseboardMat);
-  bbBack.position.set(0, 0.06, -3.03);
-  room.add(bbBack);
-
-  const bbLeft = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 6.2), baseboardMat);
-  bbLeft.position.set(-3.03, 0.06, 0);
-  room.add(bbLeft);
 
   // 3. PANEL ARQUITECTÓNICO DE LISTONES VERTICALES
   const slatPanelGroup = new THREE.Group();
