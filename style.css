@@ -1178,6 +1178,59 @@ html, body {
   letter-spacing: 0.5px;
 }
 
+.btn-preset.btn-yt-preset {
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.12), rgba(20, 20, 25, 0.4));
+  border: 1px solid rgba(255, 68, 68, 0.35);
+  color: #fff;
+  font-weight: 700;
+}
+
+.btn-preset.btn-yt-preset:hover {
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.28), rgba(255, 68, 68, 0.2));
+  border-color: #ff3333;
+  box-shadow: 0 0 16px rgba(255, 0, 0, 0.35);
+}
+
+.badge-yt {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  background: #ff0000;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+}
+
+.btn-interact-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  transition: all 0.2s ease;
+  text-align: center;
+  margin-top: -4px;
+  margin-bottom: 4px;
+}
+
+.btn-interact-toggle:hover {
+  background: rgba(0, 242, 254, 0.15);
+  border-color: var(--accent-cyan);
+  color: #fff;
+}
+
+.btn-interact-toggle.active {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: #ff3333;
+  color: #ff8888;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.25);
+}
+
 .local-file-picker {
   display: flex;
   flex-direction: column;
