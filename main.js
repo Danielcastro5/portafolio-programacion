@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import gsap from 'gsap';
 
 /* ==========================================================================
@@ -34,6 +35,15 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
+
+/* ==========================================================================
+   CSS3D RENDERER (TRANSMISIÓN DE YOUTUBE EN VIVO DIRECTAMENTE EN LA PARED)
+   ========================================================================== */
+const cssScene = new THREE.Scene();
+const cssRenderer = new CSS3DRenderer();
+cssRenderer.setSize(sizes.width, sizes.height);
+cssRenderer.domElement.id = 'css3d';
+document.body.appendChild(cssRenderer.domElement);
 
 // Referencias de las mallas 3D de las pantallas
 let leftScreenMesh = null;
@@ -412,6 +422,8 @@ function buildRoom() {
 
   const leftFrameMesh = new THREE.Mesh(new THREE.BoxGeometry(1.30, 0.80, 0.04), videoFrameMat);
   leftFrameMesh.castShadow = true;
+  leftFrameMesh.userData = { section: 'leftVideo', label: 'Pantalla de Video 1 (Live Stream)' };
+  interactiveObjects.push(leftFrameMesh);
   leftDisplayGroup.add(leftFrameMesh);
 
   const leftBacklightMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
@@ -441,6 +453,8 @@ function buildRoom() {
 
   const rightFrameMesh = new THREE.Mesh(new THREE.BoxGeometry(1.30, 0.80, 0.04), videoFrameMat);
   rightFrameMesh.castShadow = true;
+  rightFrameMesh.userData = { section: 'rightVideo', label: 'Pantalla de Video 2 (Live Stream)' };
+  interactiveObjects.push(rightFrameMesh);
   rightDisplayGroup.add(rightFrameMesh);
 
   const rightBacklightMat = new THREE.MeshBasicMaterial({ color: 0xff007f });
@@ -988,7 +1002,8 @@ function createVideoElement(src) {
   return video;
 }
 
-const leftVideoEl = createVideoElement('/videos/clip_left.mp4');
+const userDannyLuxVideo = '/videos/Jugaste%20y%20Sufri%20-%20(Video%20Oficial)%20-%20Eslabon%20Armado%20ft.%20DannyLux%20-%20DEL%20Records%202021.mp4';
+const leftVideoEl = createVideoElement(userDannyLuxVideo);
 const leftVideoTex = new THREE.VideoTexture(leftVideoEl);
 leftVideoTex.minFilter = THREE.LinearFilter;
 leftVideoTex.magFilter = THREE.LinearFilter;
@@ -999,6 +1014,46 @@ const rightVideoTex = new THREE.VideoTexture(rightVideoEl);
 rightVideoTex.minFilter = THREE.LinearFilter;
 rightVideoTex.magFilter = THREE.LinearFilter;
 rightVideoTex.colorSpace = THREE.SRGBColorSpace;
+
+/* ==========================================================================
+   ELEMENTOS CSS3D PARA TRANSMISIÓN DE YOUTUBE EN PANTALLAS DE LA PARED
+   - ESCALADOS EXACTOS (0.002) A 1.24m x 0.74m DENTRO DEL MARCO
+   - SIN CUADROS NEGROS (FONDO 100% TRANSPARENTE)
+   ========================================================================== */
+function createScreenCssElement(id) {
+  const container = document.createElement('div');
+  container.id = `css3d-container-${id}`;
+  container.className = 'css3d-screen-container';
+  container.style.width = '620px';
+  container.style.height = '370px';
+  container.style.backgroundColor = 'transparent';
+  container.style.overflow = 'hidden';
+  container.style.pointerEvents = 'none';
+  container.style.display = 'none';
+
+  const iframe = document.createElement('iframe');
+  iframe.id = `youtube-iframe-${id}`;
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.border = 'none';
+  iframe.style.pointerEvents = 'none';
+  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+  container.appendChild(iframe);
+
+  return { container, iframe };
+}
+
+const leftScreenCss = createScreenCssElement('left');
+const leftCssObject = new CSS3DObject(leftScreenCss.container);
+leftCssObject.scale.set(0.002, 0.002, 0.002);
+leftCssObject.position.set(-2.05, 2.15, -2.906);
+cssScene.add(leftCssObject);
+
+const rightScreenCss = createScreenCssElement('right');
+const rightCssObject = new CSS3DObject(rightScreenCss.container);
+rightCssObject.scale.set(0.002, 0.002, 0.002);
+rightCssObject.position.set(2.05, 2.15, -2.906);
+cssScene.add(rightCssObject);
 
 // Inicializar texturas de las pantallas
 const projectsTexture = createProjectsScreenTexture();
@@ -1651,9 +1706,10 @@ function moveToPOI(poiKey) {
       } else if (poiKey === 'wallDisplay') {
         openModal('modal-about');
       } else if (poiKey === 'leftVideo' || poiKey === 'rightVideo') {
-        openModal('modal-video');
+        showFloatingVideoBar(poiKey === 'leftVideo' ? 'left' : 'right');
       } else if (poiKey === 'home') {
         closeModals();
+        hideFloatingVideoBar();
       }
     }
   })
@@ -1795,36 +1851,28 @@ if (projectForm) {
 
 /* ==========================================================================
    ESTADO GLOBAL DE LAS PANTALLAS DE VIDEO Y YOUTUBE EN VIVO
-   - 100% PURO WEBGL EN LA PARED 3D (Z-BUFFER CON DEPTH TESTING REAL)
-   - NUNCA SOBREPONE NI ATRAVIESA MUROS, ESCRITORIOS NI MONITORES
+   - REPRODUCCIÓN DIRECTA EN LA PARED 3D (VISITANTES VEN EL VIDEO CORRIENDO)
+   - CERO CUADROS NEGROS Y CERO SOBREPOSICIÓN (CULLING FRUSTUM / ÁNGULO)
    - REPRODUCTOR INTERACTIVO EN VIVO PARA YOUTUBE Y MODO CINE
    ========================================================================== */
 const screenState = {
   left: {
-    type: 'mp4',
-    ytId: null,
-    src: '/videos/clip_left.mp4',
-    title: 'Tráiler Sci-Fi 4K',
-    canvas: null,
-    ctx: null,
-    texture: null,
-    img: null,
-    imgLoaded: false,
-    eqBands: [0.3, 0.6, 0.9, 0.4, 0.8, 0.5, 0.7, 0.2]
+    type: 'youtube',
+    ytId: 'mC1i_eG5RkE',
+    src: userDannyLuxVideo,
+    title: 'Jugaste y Sufrí - Eslabón Armado ft. DannyLux',
+    unmuted: false
   },
   right: {
     type: 'mp4',
     ytId: null,
     src: '/videos/clip_right.mp4',
     title: 'Motion Reel HD',
-    canvas: null,
-    ctx: null,
-    texture: null,
-    img: null,
-    imgLoaded: false,
-    eqBands: [0.5, 0.8, 0.3, 0.7, 0.4, 0.9, 0.6, 0.3]
+    unmuted: false
   }
 };
+
+let currentFocusedScreen = 'left';
 
 function extractYouTubeId(url) {
   if (!url) return null;
@@ -1834,155 +1882,89 @@ function extractYouTubeId(url) {
   return match ? match[1] : null;
 }
 
-function renderYouTubeCanvas(screen) {
-  const state = screenState[screen];
-  if (!state.canvas || !state.ctx) return;
-  const { canvas, ctx, img, imgLoaded, title } = state;
+const _screenFrustum = new THREE.Frustum();
+const _screenProjMatrix = new THREE.Matrix4();
+const _leftScreenPos = new THREE.Vector3(-2.05, 2.15, -2.906);
+const _rightScreenPos = new THREE.Vector3(2.05, 2.15, -2.906);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+/* CULLING INTELIGENTE: OCULTA EL CONTENEDOR 3D SI LA CÁMARA ESTÁ DETRÁS DE LOS MUROS O FUERA DE VISTA */
+function updateCss3dCulling() {
+  _screenProjMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  _screenFrustum.setFromProjectionMatrix(_screenProjMatrix);
 
-  if (imgLoaded && img) {
-    const imgRatio = img.width / img.height;
-    const canvasRatio = canvas.width / canvas.height;
-    let sW, sH, sX, sY;
-    if (imgRatio > canvasRatio) {
-      sH = img.height;
-      sW = img.height * canvasRatio;
-      sX = (img.width - sW) / 2;
-      sY = 0;
-    } else {
-      sW = img.width;
-      sH = img.width / canvasRatio;
-      sX = 0;
-      sY = (img.height - sH) / 2;
+  const camZ = camera.position.z;
+  const camX = camera.position.x;
+
+  ['left', 'right'].forEach(s => {
+    const css = s === 'left' ? leftScreenCss : rightScreenCss;
+    const state = screenState[s];
+    const screenMesh = s === 'left' ? leftScreenMesh : rightScreenMesh;
+    if (!css || !css.container) return;
+
+    if (state.type !== 'youtube' || !state.ytId) {
+      css.container.style.display = 'none';
+      if (screenMesh) screenMesh.visible = true;
+      return;
     }
-    ctx.drawImage(img, sX, sY, sW, sH, 0, 0, canvas.width, canvas.height);
-  } else {
-    ctx.fillStyle = '#0a0e1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
 
-  // Gradiente superior
-  const topGrad = ctx.createLinearGradient(0, 0, 0, 140);
-  topGrad.addColorStop(0, 'rgba(5, 7, 15, 0.88)');
-  topGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, canvas.width, 140);
+    const pos = s === 'left' ? _leftScreenPos : _rightScreenPos;
 
-  // Gradiente inferior
-  const botGrad = ctx.createLinearGradient(0, canvas.height - 180, 0, canvas.height);
-  botGrad.addColorStop(0, 'transparent');
-  botGrad.addColorStop(1, 'rgba(5, 7, 15, 0.95)');
-  ctx.fillStyle = botGrad;
-  ctx.fillRect(0, canvas.height - 180, canvas.width, 180);
+    // 1. Verificar si la cámara está físicamente detrás de las paredes o fuera del cuarto
+    const isBehindWall = camZ <= -2.80 || camX <= -2.98;
 
-  // Badge superior izquierdo: 🔴 EN VIVO // YOUTUBE
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.95)';
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(30, 30, 270, 48, 24);
-  } else {
-    ctx.rect(30, 30, 270, 48);
-  }
-  ctx.fill();
+    // 2. Verificar si está dentro del frustum de visión de la cámara
+    const inFrustum = _screenFrustum.containsPoint(pos);
 
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(56, 54, 7, 0, Math.PI * 2);
-  ctx.fill();
+    // 3. Ángulo de visión hacia el frente de la pantalla
+    const viewDirZ = camZ - pos.z;
+    const isFacingScreen = viewDirZ > 0.12;
 
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 22px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('EN VIVO // YOUTUBE', 74, 62);
-
-  // Badge derecho: 4K LIVE
-  ctx.fillStyle = 'rgba(0, 242, 254, 0.85)';
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(canvas.width - 150, 30, 120, 48, 24);
-  } else {
-    ctx.rect(canvas.width - 150, 30, 120, 48);
-  }
-  ctx.fill();
-
-  ctx.fillStyle = '#05070f';
-  ctx.font = 'bold 20px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('4K LIVE', canvas.width - 90, 61);
-
-  // Título del video
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 32px sans-serif';
-  ctx.textAlign = 'left';
-  const displayTitle = (title.length > 44) ? title.substring(0, 42) + '...' : title;
-  ctx.fillText(displayTitle, 36, canvas.height - 65);
-
-  // Barras de ecualizador de audio animadas
-  const barCount = 12;
-  const startX = 36;
-  const barY = canvas.height - 25;
-  const barW = 8;
-  const barGap = 6;
-  ctx.fillStyle = '#ef4444';
-
-  for (let i = 0; i < barCount; i++) {
-    const val = state.eqBands[i % state.eqBands.length] || 0.5;
-    const barH = 8 + val * 24;
-    ctx.fillRect(startX + i * (barW + barGap), barY - barH, barW, barH);
-  }
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-  ctx.font = '15px monospace';
-  ctx.fillText('● TRANSMISIÓN SINCRONIZADA EN PARED 3D', startX + barCount * (barW + barGap) + 16, barY - 4);
-
-  if (state.texture) {
-    state.texture.needsUpdate = true;
-  }
+    if (!isBehindWall && inFrustum && isFacingScreen) {
+      css.container.style.display = 'block';
+      css.container.style.visibility = 'visible';
+      if (screenMesh) screenMesh.visible = false;
+    } else {
+      css.container.style.visibility = 'hidden';
+      if (screenMesh) screenMesh.visible = true;
+    }
+  });
 }
 
-function createYouTubeTexture(screen, ytId, title) {
+function showFloatingVideoBar(screen) {
+  currentFocusedScreen = screen;
+  const bar = document.getElementById('floating-video-bar');
+  const screenLabel = document.getElementById('floating-bar-screen');
+  const titleEl = document.getElementById('floating-bar-title');
+  const btnAudio = document.getElementById('floating-btn-audio');
+  const btnPause = document.getElementById('floating-btn-pause');
+  if (!bar) return;
+
   const state = screenState[screen];
-  state.type = 'youtube';
-  state.ytId = ytId;
-  state.title = title || 'Transmisión YouTube';
-  state.imgLoaded = false;
+  if (screenLabel) screenLabel.textContent = screen === 'left' ? 'PANTALLA 1 (IZQ)' : 'PANTALLA 2 (DER)';
+  if (titleEl) titleEl.textContent = state.title;
 
-  if (!state.canvas) {
-    state.canvas = document.createElement('canvas');
-    state.canvas.width = 1024;
-    state.canvas.height = 640;
-    state.ctx = state.canvas.getContext('2d');
+  if (btnAudio) {
+    if (state.type === 'youtube') {
+      const isMuted = !state.unmuted;
+      btnAudio.textContent = isMuted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
+      btnAudio.classList.toggle('active', !isMuted);
+    } else {
+      const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
+      btnAudio.textContent = videoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
+      btnAudio.classList.toggle('active', !videoEl.muted);
+    }
   }
 
-  if (!state.texture) {
-    state.texture = new THREE.CanvasTexture(state.canvas);
-    state.texture.minFilter = THREE.LinearFilter;
-    state.texture.magFilter = THREE.LinearFilter;
-    state.texture.colorSpace = THREE.SRGBColorSpace;
+  if (btnPause) {
+    btnPause.textContent = '⏸ Pausar';
   }
 
-  // Asignar inmediatamente al material 3D en la pared
-  const mesh = screen === 'left' ? leftScreenMesh : rightScreenMesh;
-  if (mesh) {
-    mesh.material.map = state.texture;
-    mesh.material.needsUpdate = true;
-  }
+  bar.classList.add('active');
+}
 
-  renderYouTubeCanvas(screen);
-
-  // Cargar miniatura oficial de YouTube
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    state.img = img;
-    state.imgLoaded = true;
-    renderYouTubeCanvas(screen);
-  };
-  img.onerror = () => {
-    renderYouTubeCanvas(screen);
-  };
-  img.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+function hideFloatingVideoBar() {
+  const bar = document.getElementById('floating-video-bar');
+  if (bar) bar.classList.remove('active');
 }
 
 function openCinemaMode(screen) {
@@ -2033,7 +2015,7 @@ function initVideoControls() {
   function playYouTubeSource(screen, ytId, title) {
     const state = screenState[screen];
     const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
-    videoEl.pause();
+    videoEl.pause(); // Pausar MP4 local
 
     state.type = 'youtube';
     state.ytId = ytId;
@@ -2042,33 +2024,49 @@ function initVideoControls() {
     const titleEl = document.getElementById(`video-title-${screen}`);
     if (titleEl) titleEl.textContent = state.title;
 
-    // Actualizar textura 3D en la pared (cero superposición)
-    createYouTubeTexture(screen, ytId, state.title);
+    const flTitle = document.getElementById('floating-bar-title');
+    if (flTitle && currentFocusedScreen === screen) {
+      flTitle.textContent = state.title;
+    }
 
-    // Inyectar reproductor de YouTube en el viewport del modal
+    // Cargar y reproducir el video de YouTube en tiempo real directamente sobre la pantalla 3D en la pared
+    const css = screen === 'left' ? leftScreenCss : rightScreenCss;
+    if (css && css.iframe) {
+      const embedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&playsinline=1&enablejsapi=1&rel=0`;
+      css.iframe.src = embedUrl;
+      css.container.style.display = 'block';
+      css.container.style.visibility = 'visible';
+    }
+
+    // Ocultar la malla base WebGL para revelar el video de YouTube en la pared
+    const screenMesh = screen === 'left' ? leftScreenMesh : rightScreenMesh;
+    if (screenMesh) {
+      screenMesh.visible = false;
+    }
+
+    // Actualizar player container en el modal con estado en vivo
     const playerContainer = document.getElementById(`player-container-${screen}`);
     if (playerContainer) {
       playerContainer.innerHTML = `
-        <iframe 
-          id="yt-embed-${screen}"
-          src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-          allowfullscreen>
-        </iframe>
+        <div class="player-placeholder">
+          <span class="player-placeholder-icon">📺</span>
+          <strong>${state.title}</strong>
+          <span>Transmitiendo en vivo directamente en la pared 3D.</span>
+        </div>
       `;
     }
 
     const btnAudio = document.getElementById(`btn-toggle-audio-${screen}`);
     if (btnAudio) {
-      btnAudio.textContent = '🔊 Audio Activo (YouTube)';
-      btnAudio.classList.add('active');
+      btnAudio.textContent = '🔊 Activar Audio (YouTube)';
+      btnAudio.classList.remove('active');
     }
     const btnPause = document.getElementById(`btn-pause-${screen}`);
     if (btnPause) {
       btnPause.textContent = '⏸ Pausar';
     }
 
-    showVideoStatus(screen, `▶️ <strong>Transmitiendo YouTube:</strong> ${state.title}. Visualízalo en el reproductor y en la pared 3D.`, 'success');
+    showVideoStatus(screen, `▶️ <strong>Reproduciendo en pantalla 3D:</strong> ${state.title}. Presiona "Activar Audio" para escuchar.`, 'success');
   }
 
   function playMp4Source(screen, src, title) {
@@ -2077,28 +2075,43 @@ function initVideoControls() {
     state.src = src;
     state.title = title || 'Video MP4';
 
+    // Desactivar YouTube iframe en 3D
+    const css = screen === 'left' ? leftScreenCss : rightScreenCss;
+    if (css && css.iframe) {
+      css.iframe.src = '';
+      css.container.style.display = 'none';
+      css.container.style.visibility = 'hidden';
+    }
+
+    // Mostrar malla base WebGL con VideoTexture
+    const screenMesh = screen === 'left' ? leftScreenMesh : rightScreenMesh;
+    const tex = screen === 'left' ? leftVideoTex : rightVideoTex;
+    if (screenMesh) {
+      screenMesh.visible = true;
+      screenMesh.material.map = tex;
+      screenMesh.material.needsUpdate = true;
+    }
+
     const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
     const titleEl = document.getElementById(`video-title-${screen}`);
+    if (titleEl) titleEl.textContent = state.title;
+
+    const flTitle = document.getElementById('floating-bar-title');
+    if (flTitle && currentFocusedScreen === screen) {
+      flTitle.textContent = state.title;
+    }
+
     const prevSrc = videoEl.currentSrc || videoEl.src;
     const btnAudio = document.getElementById(`btn-toggle-audio-${screen}`);
     const btnPause = document.getElementById(`btn-pause-${screen}`);
 
-    // Restaurar VideoTexture nativa en la malla 3D de la pared
-    const mesh = screen === 'left' ? leftScreenMesh : rightScreenMesh;
-    const tex = screen === 'left' ? leftVideoTex : rightVideoTex;
-    if (mesh) {
-      mesh.material.map = tex;
-      mesh.material.needsUpdate = true;
-    }
-
-    // Actualizar player container en el modal con estado en vivo
     const playerContainer = document.getElementById(`player-container-${screen}`);
     if (playerContainer) {
       playerContainer.innerHTML = `
         <div class="player-placeholder">
           <span class="player-placeholder-icon">🎬</span>
           <strong>${state.title}</strong>
-          <span>Transmitiendo en la textura 3D de la pared. Usa "Modo Cine" para ver en grande.</span>
+          <span>Transmitiendo en la pared 3D. Usa "Modo Cine" para ver en grande.</span>
         </div>
       `;
     }
@@ -2152,13 +2165,14 @@ function initVideoControls() {
       btnAudio.addEventListener('click', () => {
         const state = screenState[screen];
         if (state.type === 'youtube') {
-          const iframe = document.getElementById(`yt-embed-${screen}`);
+          const css = screen === 'left' ? leftScreenCss : rightScreenCss;
           const isAct = btnAudio.classList.contains('active');
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: isAct ? 'mute' : 'unMute', args: '' }), '*');
+          const cmd = isAct ? 'mute' : 'unMute';
+          if (css && css.iframe && css.iframe.contentWindow) {
+            css.iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
           }
           btnAudio.classList.toggle('active', !isAct);
-          btnAudio.textContent = !isAct ? '🔊 Audio Activo (YouTube)' : '🔇 Audio Silenciado';
+          btnAudio.textContent = !isAct ? '🔇 Silenciar Audio' : '🔊 Activar Audio (YouTube)';
         } else {
           videoEl.muted = !videoEl.muted;
           if (!videoEl.muted) videoEl.volume = 1.0;
@@ -2174,10 +2188,11 @@ function initVideoControls() {
       btnPause.addEventListener('click', () => {
         const state = screenState[screen];
         if (state.type === 'youtube') {
-          const iframe = document.getElementById(`yt-embed-${screen}`);
+          const css = screen === 'left' ? leftScreenCss : rightScreenCss;
           const isPaused = btnPause.textContent.includes('Reanudar');
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: isPaused ? 'playVideo' : 'pauseVideo', args: '' }), '*');
+          const cmd = isPaused ? 'playVideo' : 'pauseVideo';
+          if (css && css.iframe && css.iframe.contentWindow) {
+            css.iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
           }
           btnPause.textContent = isPaused ? '⏸ Pausar' : '▶ Reanudar';
         } else {
@@ -2304,6 +2319,79 @@ function initVideoControls() {
 }
 initVideoControls();
 
+// Eventos de la barra flotante de control de video en vivo (sin tapar el cuarto 3D)
+const flBtnAudio = document.getElementById('floating-btn-audio');
+if (flBtnAudio) {
+  flBtnAudio.addEventListener('click', () => {
+    const screen = currentFocusedScreen || 'left';
+    const state = screenState[screen];
+    if (state.type === 'youtube') {
+      const css = screen === 'left' ? leftScreenCss : rightScreenCss;
+      state.unmuted = !state.unmuted;
+      const cmd = state.unmuted ? 'unMute' : 'mute';
+      if (css && css.iframe && css.iframe.contentWindow) {
+        css.iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
+        if (state.unmuted) {
+          css.iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
+        }
+      }
+      flBtnAudio.textContent = state.unmuted ? '🔇 Silenciar Audio' : '🔊 Activar Audio';
+      flBtnAudio.classList.toggle('active', state.unmuted);
+    } else {
+      const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
+      videoEl.muted = !videoEl.muted;
+      if (!videoEl.muted) videoEl.volume = 1.0;
+      flBtnAudio.textContent = videoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
+      flBtnAudio.classList.toggle('active', !videoEl.muted);
+    }
+  });
+}
+
+const flBtnPause = document.getElementById('floating-btn-pause');
+if (flBtnPause) {
+  flBtnPause.addEventListener('click', () => {
+    const screen = currentFocusedScreen || 'left';
+    const state = screenState[screen];
+    if (state.type === 'youtube') {
+      const css = screen === 'left' ? leftScreenCss : rightScreenCss;
+      const isPaused = flBtnPause.textContent.includes('Reanudar');
+      const cmd = isPaused ? 'playVideo' : 'pauseVideo';
+      if (css && css.iframe && css.iframe.contentWindow) {
+        css.iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
+      }
+      flBtnPause.textContent = isPaused ? '⏸ Pausar' : '▶ Reanudar';
+    } else {
+      const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
+      if (videoEl.paused) {
+        videoEl.play();
+        flBtnPause.textContent = '⏸ Pausar';
+      } else {
+        videoEl.pause();
+        flBtnPause.textContent = '▶ Reanudar';
+      }
+    }
+  });
+}
+
+const flBtnChange = document.getElementById('floating-btn-change');
+if (flBtnChange) {
+  flBtnChange.addEventListener('click', () => {
+    openModal('modal-video');
+  });
+}
+
+const flBtnClose = document.getElementById('floating-btn-close');
+if (flBtnClose) {
+  flBtnClose.addEventListener('click', () => {
+    hideFloatingVideoBar();
+    moveToPOI('home');
+  });
+}
+
+// Iniciar transmisiones en vivo directamente sobre las pantallas 3D en la pared
+playYouTubeSource('left', 'mC1i_eG5RkE', 'Jugaste y Sufrí - Eslabón Armado ft. DannyLux');
+playMp4Source('right', '/videos/clip_right.mp4', 'Motion Reel HD');
+
 /* ==========================================================================
    SINTETIZADOR DE AUDIO PROCEDURAL (0ms LAG)
    ========================================================================== */
@@ -2377,6 +2465,16 @@ function enterExperience() {
       }
     });
   }
+
+  // Activar reproducción en ambas pantallas al ingresar a la habitación
+  if (leftVideoEl && screenState.left.type === 'mp4') leftVideoEl.play().catch(() => {});
+  if (rightVideoEl && screenState.right.type === 'mp4') rightVideoEl.play().catch(() => {});
+  ['left', 'right'].forEach(s => {
+    const css = s === 'left' ? leftScreenCss : rightScreenCss;
+    if (css && css.iframe && css.iframe.contentWindow) {
+      css.iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: '' }), '*');
+    }
+  });
 }
 
 let loadProgress = 0;
@@ -2470,21 +2568,12 @@ function animate() {
     checkHover();
   }
 
-  // Animación del ecualizador dinámico en las pantallas 3D cuando transmiten YouTube
-  if (frameCount % 6 === 0) {
-    ['left', 'right'].forEach(s => {
-      const state = screenState[s];
-      if (state && state.type === 'youtube' && state.canvas) {
-        for (let i = 0; i < state.eqBands.length; i++) {
-          state.eqBands[i] = Math.max(0.12, Math.min(1.0, state.eqBands[i] + (Math.random() - 0.5) * 0.45));
-        }
-        renderYouTubeCanvas(s);
-      }
-    });
-  }
+  // Culling inteligente y renderizado 3D de YouTube en pared
+  updateCss3dCulling();
 
   controls.update();
   renderer.render(scene, camera);
+  cssRenderer.render(cssScene, camera);
 }
 
 animate();
@@ -2501,4 +2590,6 @@ window.addEventListener('resize', () => {
 
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+  cssRenderer.setSize(sizes.width, sizes.height);
 });
