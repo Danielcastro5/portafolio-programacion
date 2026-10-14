@@ -427,20 +427,38 @@
               <span class="screen-pill">PANTALLA 1 (IZQUIERDA)</span>
               <span class="live-indicator">● EN VIVO</span>
             </div>
-            <h3 class="video-screen-title">Tráiler de Cine & Sci-Fi 4K</h3>
+            <h3 id="video-title-left" class="video-screen-title">Tráiler Sci-Fi 4K</h3>
             <div class="video-ctrl-btns">
               <button id="btn-toggle-audio-left" class="btn-audio-toggle">🔊 Activar Audio</button>
               <button id="btn-pause-left" class="btn-play-pause">⏸ Pausar</button>
             </div>
+            
             <div class="video-source-presets">
-              <span class="preset-label">Canales Rápidos:</span>
-              <button class="btn-preset" data-screen="left" data-src="/videos/clip_left.mp4">🎬 Tráiler Sci-Fi 4K</button>
-              <button class="btn-preset" data-screen="left" data-src="https://media.w3.org/2010/05/bunny/trailer.mp4">🐰 Animación 3D Open</button>
-              <button class="btn-preset" data-screen="left" data-src="https://vjs.zencdn.net/v/oceans.mp4">🌊 Océanos HD</button>
+              <span class="preset-label">Canales & Videos Disponibles:</span>
+              <button class="btn-preset featured-preset" data-screen="left" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux" data-src="/videos/Jugaste%20y%20Sufri%20-%20(Video%20Oficial)%20-%20Eslabon%20Armado%20ft.%20DannyLux%20-%20DEL%20Records%202021.mp4">
+                🔥🎵 Jugaste y Sufrí (DannyLux) <span class="badge-custom">TU VIDEO</span>
+              </button>
+              <button class="btn-preset" data-screen="left" data-title="Tráiler de Cine & Sci-Fi 4K" data-src="/videos/clip_left.mp4">🎬 Tráiler Sci-Fi 4K</button>
+              <button class="btn-preset" data-screen="left" data-title="Motion Reel HD" data-src="/videos/clip_right.mp4">🌸 Motion Reel HD</button>
+              <button class="btn-preset" data-screen="left" data-title="Océanos del Mundo 4K" data-src="https://vjs.zencdn.net/v/oceans.mp4">🌊 Océanos HD</button>
+              <button class="btn-preset" data-screen="left" data-title="Animación 3D Open Source" data-src="https://media.w3.org/2010/05/bunny/trailer.mp4">🐰 Animación 3D Open</button>
             </div>
-            <div class="custom-video-input">
-              <input type="text" id="custom-url-left" placeholder="Pega URL de video .mp4 propio..." />
-              <button id="btn-load-custom-left" class="btn-load-src">Cargar</button>
+
+            <div class="local-file-picker">
+              <span class="preset-label">Reproducir archivo desde tu PC:</span>
+              <label class="btn-file-select" for="file-video-left">
+                📁 Elegir video propio (.mp4, .webm)
+              </label>
+              <input type="file" id="file-video-left" accept="video/mp4,video/webm" style="display:none;" />
+            </div>
+
+            <div class="custom-video-section">
+              <span class="preset-label">O enlace directo a archivo (.mp4):</span>
+              <div class="custom-video-input">
+                <input type="text" id="custom-url-left" placeholder="https://ejemplo.com/video.mp4" />
+                <button id="btn-load-custom-left" class="btn-load-src">Cargar</button>
+              </div>
+              <div id="status-left" class="video-status-msg"></div>
             </div>
           </div>
 
@@ -450,26 +468,51 @@
               <span class="screen-pill">PANTALLA 2 (DERECHA)</span>
               <span class="live-indicator">● EN VIVO</span>
             </div>
-            <h3 class="video-screen-title">Showcase Motion & Documental</h3>
+            <h3 id="video-title-right" class="video-screen-title">Motion Reel HD</h3>
             <div class="video-ctrl-btns">
               <button id="btn-toggle-audio-right" class="btn-audio-toggle">🔊 Activar Audio</button>
               <button id="btn-pause-right" class="btn-play-pause">⏸ Pausar</button>
             </div>
+
             <div class="video-source-presets">
-              <span class="preset-label">Canales Rápidos:</span>
-              <button class="btn-preset" data-screen="right" data-src="/videos/clip_right.mp4">🌸 Motion Reel HD</button>
-              <button class="btn-preset" data-screen="right" data-src="https://vjs.zencdn.net/v/oceans.mp4">🌊 Océanos HD</button>
-              <button class="btn-preset" data-screen="right" data-src="https://media.w3.org/2010/05/sintel/trailer.mp4">⚔️ Tráiler Sintel 4K</button>
+              <span class="preset-label">Canales & Videos Disponibles:</span>
+              <button class="btn-preset featured-preset" data-screen="right" data-title="Jugaste y Sufrí - Eslabón Armado ft. DannyLux" data-src="/videos/Jugaste%20y%20Sufri%20-%20(Video%20Oficial)%20-%20Eslabon%20Armado%20ft.%20DannyLux%20-%20DEL%20Records%202021.mp4">
+                🔥🎵 Jugaste y Sufrí (DannyLux) <span class="badge-custom">TU VIDEO</span>
+              </button>
+              <button class="btn-preset" data-screen="right" data-title="Motion Reel HD" data-src="/videos/clip_right.mp4">🌸 Motion Reel HD</button>
+              <button class="btn-preset" data-screen="right" data-title="Tráiler de Cine & Sci-Fi 4K" data-src="/videos/clip_left.mp4">🎬 Tráiler Sci-Fi 4K</button>
+              <button class="btn-preset" data-screen="right" data-title="Océanos del Mundo 4K" data-src="https://vjs.zencdn.net/v/oceans.mp4">🌊 Océanos HD</button>
+              <button class="btn-preset" data-screen="right" data-title="Tráiler de Acción Sintel" data-src="https://media.w3.org/2010/05/sintel/trailer.mp4">⚔️ Tráiler Sintel 4K</button>
             </div>
-            <div class="custom-video-input">
-              <input type="text" id="custom-url-right" placeholder="Pega URL de video .mp4 propio..." />
-              <button id="btn-load-custom-right" class="btn-load-src">Cargar</button>
+
+            <div class="local-file-picker">
+              <span class="preset-label">Reproducir archivo desde tu PC:</span>
+              <label class="btn-file-select" for="file-video-right">
+                📁 Elegir video propio (.mp4, .webm)
+              </label>
+              <input type="file" id="file-video-right" accept="video/mp4,video/webm" style="display:none;" />
+            </div>
+
+            <div class="custom-video-section">
+              <span class="preset-label">O enlace directo a archivo (.mp4):</span>
+              <div class="custom-video-input">
+                <input type="text" id="custom-url-right" placeholder="https://ejemplo.com/video.mp4" />
+                <button id="btn-load-custom-right" class="btn-load-src">Cargar</button>
+              </div>
+              <div id="status-right" class="video-status-msg"></div>
             </div>
           </div>
         </div>
 
         <div class="video-info-box">
-          <p>💡 <strong>¿Cómo funciona la transmisión al estilo Jesse Zhou?</strong> Los cuadros usan <code>THREE.VideoTexture</code> conectadas a elementos <code>&lt;video&gt;</code> HTML en memoria con reproducción acelerada por GPU. Puedes cargar cualquier enlace directo a un archivo <code>.mp4</code> o colocar tus propios videos en la carpeta <code>public/videos/</code>.</p>
+          <p>⚠️ <strong>¿Por qué se pausaba al ingresar links de YouTube / Redes?</strong></p>
+          <p>La tecnología 3D WebGL (usada por Jesse Zhou y Three.js) proyecta los fotogramas del video directamente sobre la superficie 3D. <strong>YouTube, Vimeo, TikTok e Instagram protegen sus videos dentro de su propio reproductor web con DRM y no permiten extraer el flujo de video en crudo.</strong> Por eso, si pegas un enlace de YouTube normal, el navegador no lo reconoce como archivo de video y se detiene.</p>
+          <p>✅ <strong>Soluciones para reproducir cualquier video:</strong></p>
+          <ul class="video-solutions-list">
+            <li><strong>Tu video ya está listo:</strong> Dale clic al botón <span class="badge-custom">TU VIDEO</span> arriba para reproducir <em>"Jugaste y Sufrí"</em>.</li>
+            <li><strong>Archivos de tu computadora:</strong> Usa el botón <strong>"📁 Elegir video propio"</strong> para transmitir al instante cualquier video de tu PC sin subir nada.</li>
+            <li><strong>URLs de Internet:</strong> Debe ser un enlace <strong>directo al archivo</strong> que termine en <code>.mp4</code> o <code>.webm</code> con CORS permitido.</li>
+          </ul>
         </div>
       </div>
     </div>

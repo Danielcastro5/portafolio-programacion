@@ -1598,15 +1598,83 @@ if (projectForm) {
    BINDINGS DE CONTROLES DE VIDEO EN VIVO (AUDIO, PAUSA Y PRESETS)
    ========================================================================== */
 function initVideoControls() {
+  function showVideoStatus(screen, msg, type = 'info') {
+    const statusEl = document.getElementById(`status-${screen}`);
+    if (!statusEl) return;
+    statusEl.className = `video-status-msg active ${type}`;
+    statusEl.innerHTML = msg;
+  }
+
+  function isSocialOrStreamingPage(url) {
+    const lower = url.toLowerCase();
+    return lower.includes('youtube.com') ||
+           lower.includes('youtu.be') ||
+           lower.includes('vimeo.com') ||
+           lower.includes('tiktok.com') ||
+           lower.includes('instagram.com') ||
+           lower.includes('facebook.com') ||
+           lower.includes('twitter.com') ||
+           lower.includes('x.com') ||
+           lower.includes('twitch.tv');
+  }
+
+  function loadVideoSource(screen, src, title) {
+    const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
+    const titleEl = document.getElementById(`video-title-${screen}`);
+    const prevSrc = videoEl.currentSrc || videoEl.src;
+
+    showVideoStatus(screen, '🔄 Conectando y cargando flujo de video...', 'info');
+    if (title && titleEl) {
+      titleEl.textContent = title;
+    }
+
+    let hasLoaded = false;
+
+    const onCanPlay = () => {
+      hasLoaded = true;
+      videoEl.removeEventListener('canplay', onCanPlay);
+      videoEl.removeEventListener('error', onError);
+      videoEl.play().then(() => {
+        showVideoStatus(screen, `✅ Transmitiendo en vivo: ${title || 'Video'}`, 'success');
+        const pauseBtn = document.getElementById(`btn-pause-${screen}`);
+        if (pauseBtn) pauseBtn.textContent = '⏸ Pausar';
+      }).catch(e => {
+        console.warn('Autoplay notice:', e);
+        showVideoStatus(screen, '⚠️ Video listo. Presiona "Pausar/Reanudar" para reproducir.', 'warning');
+      });
+    };
+
+    const onError = (e) => {
+      if (hasLoaded) return;
+      videoEl.removeEventListener('canplay', onCanPlay);
+      videoEl.removeEventListener('error', onError);
+      console.error('Video load error:', e);
+      showVideoStatus(screen, '❌ <strong>No se pudo cargar:</strong> La URL no es un video accesible o bloqueó CORS. Restaurando canal previo.', 'error');
+      if (prevSrc && prevSrc !== src) {
+        videoEl.src = prevSrc;
+        videoEl.play().catch(() => {});
+      }
+    };
+
+    videoEl.addEventListener('canplay', onCanPlay, { once: true });
+    videoEl.addEventListener('error', onError, { once: true });
+
+    videoEl.src = src;
+    videoEl.load();
+  }
+
+  // Audio Left
   const btnAudioLeft = document.getElementById('btn-toggle-audio-left');
   if (btnAudioLeft) {
     btnAudioLeft.addEventListener('click', () => {
       leftVideoEl.muted = !leftVideoEl.muted;
+      if (!leftVideoEl.muted) leftVideoEl.volume = 1.0;
       btnAudioLeft.textContent = leftVideoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
       btnAudioLeft.classList.toggle('active', !leftVideoEl.muted);
     });
   }
 
+  // Pause Left
   const btnPauseLeft = document.getElementById('btn-pause-left');
   if (btnPauseLeft) {
     btnPauseLeft.addEventListener('click', () => {
@@ -1620,15 +1688,18 @@ function initVideoControls() {
     });
   }
 
+  // Audio Right
   const btnAudioRight = document.getElementById('btn-toggle-audio-right');
   if (btnAudioRight) {
     btnAudioRight.addEventListener('click', () => {
       rightVideoEl.muted = !rightVideoEl.muted;
+      if (!rightVideoEl.muted) rightVideoEl.volume = 1.0;
       btnAudioRight.textContent = rightVideoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
       btnAudioRight.classList.toggle('active', !rightVideoEl.muted);
     });
   }
 
+  // Pause Right
   const btnPauseRight = document.getElementById('btn-pause-right');
   if (btnPauseRight) {
     btnPauseRight.addEventListener('click', () => {
@@ -1647,38 +1718,73 @@ function initVideoControls() {
     btn.addEventListener('click', () => {
       const screen = btn.getAttribute('data-screen');
       const src = btn.getAttribute('data-src');
-      if (screen === 'left' && src) {
-        leftVideoEl.src = src;
-        leftVideoEl.play();
-      } else if (screen === 'right' && src) {
-        rightVideoEl.src = src;
-        rightVideoEl.play();
+      const title = btn.getAttribute('data-title') || btn.textContent.trim();
+      
+      document.querySelectorAll(`.btn-preset[data-screen="${screen}"]`).forEach(b => b.classList.remove('active-channel'));
+      btn.classList.add('active-channel');
+
+      if (screen && src) {
+        loadVideoSource(screen, src, title);
       }
     });
   });
 
-  // Entrada de video URL personalizada
+  // Selector de archivos locales desde tu PC
+  const fileInputLeft = document.getElementById('file-video-left');
+  if (fileInputLeft) {
+    fileInputLeft.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const objectUrl = URL.createObjectURL(file);
+        loadVideoSource('left', objectUrl, `📂 ${file.name}`);
+      }
+    });
+  }
+
+  const fileInputRight = document.getElementById('file-video-right');
+  if (fileInputRight) {
+    fileInputRight.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const objectUrl = URL.createObjectURL(file);
+        loadVideoSource('right', objectUrl, `📂 ${file.name}`);
+      }
+    });
+  }
+
+  // Carga de URL personalizada Left
   const btnLoadCustomLeft = document.getElementById('btn-load-custom-left');
   const inputCustomLeft = document.getElementById('custom-url-left');
   if (btnLoadCustomLeft && inputCustomLeft) {
     btnLoadCustomLeft.addEventListener('click', () => {
       const url = inputCustomLeft.value.trim();
-      if (url) {
-        leftVideoEl.src = url;
-        leftVideoEl.play();
+      if (!url) {
+        showVideoStatus('left', '⚠️ Por favor ingresa una URL de video directa.', 'warning');
+        return;
       }
+      if (isSocialOrStreamingPage(url)) {
+        showVideoStatus('left', '⚠️ <strong>YouTube/Redes no entregan el archivo de video en crudo.</strong> WebGL requiere un enlace directo (.mp4/.webm). Usa el botón <em>"📁 Elegir video propio"</em> para reproducir tu archivo descargado.', 'warning');
+        return;
+      }
+      loadVideoSource('left', url, 'Enlace de Streaming Externo');
     });
   }
 
+  // Carga de URL personalizada Right
   const btnLoadCustomRight = document.getElementById('btn-load-custom-right');
   const inputCustomRight = document.getElementById('custom-url-right');
   if (btnLoadCustomRight && inputCustomRight) {
     btnLoadCustomRight.addEventListener('click', () => {
       const url = inputCustomRight.value.trim();
-      if (url) {
-        rightVideoEl.src = url;
-        rightVideoEl.play();
+      if (!url) {
+        showVideoStatus('right', '⚠️ Por favor ingresa una URL de video directa.', 'warning');
+        return;
       }
+      if (isSocialOrStreamingPage(url)) {
+        showVideoStatus('right', '⚠️ <strong>YouTube/Redes no entregan el archivo de video en crudo.</strong> WebGL requiere un enlace directo (.mp4/.webm). Usa el botón <em>"📁 Elegir video propio"</em> para reproducir tu archivo descargado.', 'warning');
+        return;
+      }
+      loadVideoSource('right', url, 'Enlace de Streaming Externo');
     });
   }
 }
