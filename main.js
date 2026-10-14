@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import gsap from 'gsap';
 
 /* ==========================================================================
@@ -36,23 +35,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 
-/* ==========================================================================
-   CSS3D RENDERER (TRANSMISIÓN DE YOUTUBE EN VIVO DIRECTA EN 3D)
-   ========================================================================== */
-const cssScene = new THREE.Scene();
-const cssRenderer = new CSS3DRenderer();
-cssRenderer.setSize(sizes.width, sizes.height);
-cssRenderer.domElement.id = 'css3d';
-cssRenderer.domElement.style.position = 'fixed';
-cssRenderer.domElement.style.top = '0';
-cssRenderer.domElement.style.left = '0';
-cssRenderer.domElement.style.width = '100%';
-cssRenderer.domElement.style.height = '100%';
-cssRenderer.domElement.style.pointerEvents = 'none'; // Permite que OrbitControls reciba los clics del mouse
-cssRenderer.domElement.style.zIndex = '1';
-document.body.appendChild(cssRenderer.domElement);
-
-// Referencias globales de las pantallas para alternar entre WebGL MP4 y YouTube CSS3D
+// Referencias de las mallas 3D de las pantallas
 let leftScreenMesh = null;
 let rightScreenMesh = null;
 
@@ -831,43 +814,7 @@ const wallScreenTex = createWallScreenTexture();
 
 buildRoom();
 
-/* ==========================================================================
-   ELEMENTOS CSS3D PARA PANTALLAS DE YOUTUBE EN VIVO EN PARED
-   ========================================================================== */
-function createScreenCssElement(id) {
-  const container = document.createElement('div');
-  container.id = `css3d-container-${id}`;
-  container.style.width = '640px';
-  container.style.height = '382px';
-  container.style.backgroundColor = '#000';
-  container.style.borderRadius = '4px';
-  container.style.overflow = 'hidden';
-  container.style.pointerEvents = 'none';
-  container.style.display = 'none';
 
-  const iframe = document.createElement('iframe');
-  iframe.id = `youtube-iframe-${id}`;
-  iframe.style.width = '100%';
-  iframe.style.height = '100%';
-  iframe.style.border = 'none';
-  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-  iframe.allowFullscreen = true;
-  container.appendChild(iframe);
-
-  return { container, iframe };
-}
-
-const leftScreenCss = createScreenCssElement('left');
-const leftCssObject = new CSS3DObject(leftScreenCss.container);
-leftCssObject.scale.set(0.0019375, 0.0019375, 0.0019375);
-leftCssObject.position.set(-2.05, 2.15, -2.905);
-cssScene.add(leftCssObject);
-
-const rightScreenCss = createScreenCssElement('right');
-const rightCssObject = new CSS3DObject(rightScreenCss.container);
-rightCssObject.scale.set(0.0019375, 0.0019375, 0.0019375);
-rightCssObject.position.set(2.05, 2.15, -2.905);
-cssScene.add(rightCssObject);
 
 /* ==========================================================================
    CARGA DEL SETUP PRINCIPAL (gaming_setup_v2.glb)
@@ -1655,16 +1602,10 @@ if (projectForm) {
 
 /* ==========================================================================
    BINDINGS DE CONTROLES DE VIDEO EN VIVO (AUDIO, PAUSA Y PRESETS)
+   - 100% PURO WEBGL (THREE.VideoTexture) CON DEPTH-TEST REAL
+   - NUNCA SOBREESCRIBE MUROS NI MONITORES
    ========================================================================== */
 function initVideoControls() {
-  let isLeftYoutubeMuted = true;
-  let isLeftYoutubePaused = false;
-  let isLeftInteract = false;
-
-  let isRightYoutubeMuted = true;
-  let isRightYoutubePaused = false;
-  let isRightInteract = false;
-
   function showVideoStatus(screen, msg, type = 'info') {
     const statusEl = document.getElementById(`status-${screen}`);
     if (!statusEl) return;
@@ -1672,64 +1613,11 @@ function initVideoControls() {
     statusEl.innerHTML = msg;
   }
 
-  function extractYouTubeId(url) {
-    if (!url) return null;
-    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
-    return (match && match[2].length === 11) ? match[2] : null;
-  }
-
-  function playYouTube(screen, videoId, title) {
-    const css = screen === 'left' ? leftScreenCss : rightScreenCss;
-    const screenMesh = screen === 'left' ? leftScreenMesh : rightScreenMesh;
-    const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
-    const titleEl = document.getElementById(`video-title-${screen}`);
-    const btnAudio = document.getElementById(`btn-toggle-audio-${screen}`);
-    const btnPause = document.getElementById(`btn-pause-${screen}`);
-
-    // Pausar el video MP4 local y ocultar la malla 3D de WebGL
-    videoEl.pause();
-    if (screenMesh) screenMesh.visible = false;
-
-    // Configurar el iframe de YouTube en 3D
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&loop=1&playlist=${videoId}&playsinline=1&enablejsapi=1`;
-    css.iframe.src = embedUrl;
-    css.container.style.display = 'block';
-
-    if (screen === 'left') {
-      isLeftYoutubeMuted = true;
-      isLeftYoutubePaused = false;
-    } else {
-      isRightYoutubeMuted = true;
-      isRightYoutubePaused = false;
-    }
-
-    if (title && titleEl) {
-      titleEl.textContent = title;
-    }
-
-    if (btnAudio) {
-      btnAudio.textContent = '🔊 Activar Audio (YouTube)';
-      btnAudio.classList.remove('active');
-    }
-    if (btnPause) {
-      btnPause.textContent = '⏸ Pausar';
-    }
-
-    showVideoStatus(screen, `▶️ <strong>Transmitiendo YouTube en 3D en vivo:</strong> ${title || videoId}. Presiona "Activar Audio" para escuchar.`, 'success');
-  }
-
-  function playMp4(screen, src, title) {
-    const css = screen === 'left' ? leftScreenCss : rightScreenCss;
-    const screenMesh = screen === 'left' ? leftScreenMesh : rightScreenMesh;
+  function playVideoSource(screen, src, title) {
     const videoEl = screen === 'left' ? leftVideoEl : rightVideoEl;
     const titleEl = document.getElementById(`video-title-${screen}`);
     const prevSrc = videoEl.currentSrc || videoEl.src;
     const btnAudio = document.getElementById(`btn-toggle-audio-${screen}`);
-
-    // Ocultar YouTube iframe
-    css.iframe.src = '';
-    css.container.style.display = 'none';
-    if (screenMesh) screenMesh.visible = true;
 
     showVideoStatus(screen, '🔄 Conectando y cargando flujo de video...', 'info');
     if (title && titleEl) {
@@ -1743,7 +1631,7 @@ function initVideoControls() {
       videoEl.removeEventListener('canplay', onCanPlay);
       videoEl.removeEventListener('error', onError);
       videoEl.play().then(() => {
-        showVideoStatus(screen, `✅ Transmitiendo en vivo: ${title || 'Video'}`, 'success');
+        showVideoStatus(screen, `✅ Transmitiendo en vivo en pantalla: ${title || 'Video'}`, 'success');
         const pauseBtn = document.getElementById(`btn-pause-${screen}`);
         if (pauseBtn) pauseBtn.textContent = '⏸ Pausar';
       }).catch(e => {
@@ -1756,7 +1644,7 @@ function initVideoControls() {
       if (hasLoaded) return;
       videoEl.removeEventListener('canplay', onCanPlay);
       videoEl.removeEventListener('error', onError);
-      showVideoStatus(screen, '❌ <strong>No se pudo cargar:</strong> La URL no es accesible o bloqueó CORS. Restaurando canal previo.', 'error');
+      showVideoStatus(screen, '❌ <strong>No se pudo cargar:</strong> El enlace no es un archivo de video accesible o bloqueó CORS. Restaurando canal previo.', 'error');
       if (prevSrc && prevSrc !== src) {
         videoEl.src = prevSrc;
         videoEl.play().catch(() => {});
@@ -1779,18 +1667,10 @@ function initVideoControls() {
   const btnAudioLeft = document.getElementById('btn-toggle-audio-left');
   if (btnAudioLeft) {
     btnAudioLeft.addEventListener('click', () => {
-      if (leftScreenCss.container.style.display === 'block') {
-        isLeftYoutubeMuted = !isLeftYoutubeMuted;
-        const cmd = isLeftYoutubeMuted ? 'mute' : 'unMute';
-        leftScreenCss.iframe.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
-        btnAudioLeft.textContent = isLeftYoutubeMuted ? '🔊 Activar Audio (YouTube)' : '🔇 Silenciar (YouTube)';
-        btnAudioLeft.classList.toggle('active', !isLeftYoutubeMuted);
-      } else {
-        leftVideoEl.muted = !leftVideoEl.muted;
-        if (!leftVideoEl.muted) leftVideoEl.volume = 1.0;
-        btnAudioLeft.textContent = leftVideoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
-        btnAudioLeft.classList.toggle('active', !leftVideoEl.muted);
-      }
+      leftVideoEl.muted = !leftVideoEl.muted;
+      if (!leftVideoEl.muted) leftVideoEl.volume = 1.0;
+      btnAudioLeft.textContent = leftVideoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
+      btnAudioLeft.classList.toggle('active', !leftVideoEl.muted);
     });
   }
 
@@ -1798,19 +1678,12 @@ function initVideoControls() {
   const btnPauseLeft = document.getElementById('btn-pause-left');
   if (btnPauseLeft) {
     btnPauseLeft.addEventListener('click', () => {
-      if (leftScreenCss.container.style.display === 'block') {
-        isLeftYoutubePaused = !isLeftYoutubePaused;
-        const cmd = isLeftYoutubePaused ? 'pauseVideo' : 'playVideo';
-        leftScreenCss.iframe.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
-        btnPauseLeft.textContent = isLeftYoutubePaused ? '▶ Reanudar' : '⏸ Pausar';
+      if (leftVideoEl.paused) {
+        leftVideoEl.play();
+        btnPauseLeft.textContent = '⏸ Pausar';
       } else {
-        if (leftVideoEl.paused) {
-          leftVideoEl.play();
-          btnPauseLeft.textContent = '⏸ Pausar';
-        } else {
-          leftVideoEl.pause();
-          btnPauseLeft.textContent = '▶ Reanudar';
-        }
+        leftVideoEl.pause();
+        btnPauseLeft.textContent = '▶ Reanudar';
       }
     });
   }
@@ -1819,18 +1692,10 @@ function initVideoControls() {
   const btnAudioRight = document.getElementById('btn-toggle-audio-right');
   if (btnAudioRight) {
     btnAudioRight.addEventListener('click', () => {
-      if (rightScreenCss.container.style.display === 'block') {
-        isRightYoutubeMuted = !isRightYoutubeMuted;
-        const cmd = isRightYoutubeMuted ? 'mute' : 'unMute';
-        rightScreenCss.iframe.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
-        btnAudioRight.textContent = isRightYoutubeMuted ? '🔊 Activar Audio (YouTube)' : '🔇 Silenciar (YouTube)';
-        btnAudioRight.classList.toggle('active', !isRightYoutubeMuted);
-      } else {
-        rightVideoEl.muted = !rightVideoEl.muted;
-        if (!rightVideoEl.muted) rightVideoEl.volume = 1.0;
-        btnAudioRight.textContent = rightVideoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
-        btnAudioRight.classList.toggle('active', !rightVideoEl.muted);
-      }
+      rightVideoEl.muted = !rightVideoEl.muted;
+      if (!rightVideoEl.muted) rightVideoEl.volume = 1.0;
+      btnAudioRight.textContent = rightVideoEl.muted ? '🔊 Activar Audio' : '🔇 Silenciar Audio';
+      btnAudioRight.classList.toggle('active', !rightVideoEl.muted);
     });
   }
 
@@ -1838,48 +1703,13 @@ function initVideoControls() {
   const btnPauseRight = document.getElementById('btn-pause-right');
   if (btnPauseRight) {
     btnPauseRight.addEventListener('click', () => {
-      if (rightScreenCss.container.style.display === 'block') {
-        isRightYoutubePaused = !isRightYoutubePaused;
-        const cmd = isRightYoutubePaused ? 'pauseVideo' : 'playVideo';
-        rightScreenCss.iframe.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: cmd, args: '' }), '*');
-        btnPauseRight.textContent = isRightYoutubePaused ? '▶ Reanudar' : '⏸ Pausar';
+      if (rightVideoEl.paused) {
+        rightVideoEl.play();
+        btnPauseRight.textContent = '⏸ Pausar';
       } else {
-        if (rightVideoEl.paused) {
-          rightVideoEl.play();
-          btnPauseRight.textContent = '⏸ Pausar';
-        } else {
-          rightVideoEl.pause();
-          btnPauseRight.textContent = '▶ Reanudar';
-        }
+        rightVideoEl.pause();
+        btnPauseRight.textContent = '▶ Reanudar';
       }
-    });
-  }
-
-  // Toggle interacción directa con clicks en YouTube Left
-  const btnInteractLeft = document.getElementById('btn-toggle-interact-left');
-  if (btnInteractLeft) {
-    btnInteractLeft.addEventListener('click', () => {
-      isLeftInteract = !isLeftInteract;
-      leftScreenCss.container.style.pointerEvents = isLeftInteract ? 'auto' : 'none';
-      leftScreenCss.iframe.style.pointerEvents = isLeftInteract ? 'auto' : 'none';
-      btnInteractLeft.textContent = isLeftInteract
-        ? '🖱️ Clics dentro de YouTube: ACTIVADO'
-        : '🎥 Modo Cámara 3D (Clics en YouTube desactivados)';
-      btnInteractLeft.classList.toggle('active', isLeftInteract);
-    });
-  }
-
-  // Toggle interacción directa con clicks en YouTube Right
-  const btnInteractRight = document.getElementById('btn-toggle-interact-right');
-  if (btnInteractRight) {
-    btnInteractRight.addEventListener('click', () => {
-      isRightInteract = !isRightInteract;
-      rightScreenCss.container.style.pointerEvents = isRightInteract ? 'auto' : 'none';
-      rightScreenCss.iframe.style.pointerEvents = isRightInteract ? 'auto' : 'none';
-      btnInteractRight.textContent = isRightInteract
-        ? '🖱️ Clics dentro de YouTube: ACTIVADO'
-        : '🎥 Modo Cámara 3D (Clics en YouTube desactivados)';
-      btnInteractRight.classList.toggle('active', isRightInteract);
     });
   }
 
@@ -1888,21 +1718,13 @@ function initVideoControls() {
     btn.addEventListener('click', () => {
       const screen = btn.getAttribute('data-screen');
       const src = btn.getAttribute('data-src');
-      const type = btn.getAttribute('data-type');
       const title = btn.getAttribute('data-title') || btn.textContent.trim();
       
       document.querySelectorAll(`.btn-preset[data-screen="${screen}"]`).forEach(b => b.classList.remove('active-channel'));
       btn.classList.add('active-channel');
 
-      if (!screen || !src) return;
-
-      if (type === 'youtube') {
-        const ytId = extractYouTubeId(src);
-        if (ytId) {
-          playYouTube(screen, ytId, title);
-        }
-      } else {
-        playMp4(screen, src, title);
+      if (screen && src) {
+        playVideoSource(screen, src, title);
       }
     });
   });
@@ -1914,7 +1736,7 @@ function initVideoControls() {
       const file = e.target.files && e.target.files[0];
       if (file) {
         const objectUrl = URL.createObjectURL(file);
-        playMp4('left', objectUrl, `📂 ${file.name}`);
+        playVideoSource('left', objectUrl, `📂 ${file.name}`);
       }
     });
   }
@@ -1925,9 +1747,23 @@ function initVideoControls() {
       const file = e.target.files && e.target.files[0];
       if (file) {
         const objectUrl = URL.createObjectURL(file);
-        playMp4('right', objectUrl, `📂 ${file.name}`);
+        playVideoSource('right', objectUrl, `📂 ${file.name}`);
       }
     });
+  }
+
+  function handleCustomUrl(screen, inputEl) {
+    const url = inputEl.value.trim();
+    if (!url) {
+      showVideoStatus(screen, '⚠️ Por favor ingresa una URL de video directa.', 'warning');
+      return;
+    }
+    const lower = url.toLowerCase();
+    if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+      showVideoStatus(screen, '⚠️ <strong>YouTube protege sus videos con DRM y no entrega el archivo directo para 3D.</strong> Para transmitirlo en la pared sin que sobreescriba los muros: descárgalo en 1 clic (ej. cobalt.tools) o usa el botón verde <em>"📁 Elegir video propio"</em>.', 'warning');
+      return;
+    }
+    playVideoSource(screen, url, 'Transmisión Externa');
   }
 
   // Carga de URL personalizada Left
@@ -1935,17 +1771,7 @@ function initVideoControls() {
   const inputCustomLeft = document.getElementById('custom-url-left');
   if (btnLoadCustomLeft && inputCustomLeft) {
     btnLoadCustomLeft.addEventListener('click', () => {
-      const url = inputCustomLeft.value.trim();
-      if (!url) {
-        showVideoStatus('left', '⚠️ Por favor pega un enlace de YouTube o URL de video directa.', 'warning');
-        return;
-      }
-      const ytId = extractYouTubeId(url);
-      if (ytId) {
-        playYouTube('left', ytId, 'Video de YouTube');
-        return;
-      }
-      playMp4('left', url, 'Enlace de Streaming Externo');
+      handleCustomUrl('left', inputCustomLeft);
     });
   }
 
@@ -1954,17 +1780,7 @@ function initVideoControls() {
   const inputCustomRight = document.getElementById('custom-url-right');
   if (btnLoadCustomRight && inputCustomRight) {
     btnLoadCustomRight.addEventListener('click', () => {
-      const url = inputCustomRight.value.trim();
-      if (!url) {
-        showVideoStatus('right', '⚠️ Por favor pega un enlace de YouTube o URL de video directa.', 'warning');
-        return;
-      }
-      const ytId = extractYouTubeId(url);
-      if (ytId) {
-        playYouTube('right', ytId, 'Video de YouTube');
-        return;
-      }
-      playMp4('right', url, 'Enlace de Streaming Externo');
+      handleCustomUrl('right', inputCustomRight);
     });
   }
 }
@@ -2138,7 +1954,6 @@ function animate() {
 
   controls.update();
   renderer.render(scene, camera);
-  cssRenderer.render(cssScene, camera);
 }
 
 animate();
@@ -2155,5 +1970,4 @@ window.addEventListener('resize', () => {
 
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-  cssRenderer.setSize(sizes.width, sizes.height);
 });
